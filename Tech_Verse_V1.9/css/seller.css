@@ -1,0 +1,46 @@
+/* Seller page styles */
+.seller-main{
+  max-width:1000px;margin:30px auto;padding:0 20px;font-family:"Aptos",sans-serif
+}
+.listing-form{
+  display:flex;flex-direction:column;gap:10px
+}
+.form-input{
+  padding:8px;border-radius:6px;border:1px solid #ccc;font-family:"Aptos"
+}
+.preview{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:8px
+}
+.btn-primary{
+  width:160px;padding:10px;border-radius:6px;border:none;background:#156082;color:#fff;cursor:pointer
+}
+.seller-listings{
+  margin-top:20px
+}
+
+/* spacing for delete button in seller listing rows */
+.review-item .btn-remove{
+   margin-left:12px; 
+}
+
+/* style for delete button in seller rows */
+.review-item .btn-remove{
+  background:transparent;
+  border:1px solid rgba(185,28,28,0.12);
+  color:#b91c1c;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.review-item .btn-remove:hover{
+   background:rgba(185,28,28,0.04);
+ }
+.review-item .btn-remove[disabled]{
+   opacity:0.6; cursor:not-allowed; 
+}
+
+@media (max-width:640px){
+  .seller-main{padding:0 12px}
+  .listing-form{gap:8px}
+}
