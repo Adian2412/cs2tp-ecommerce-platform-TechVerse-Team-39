@@ -12,6 +12,31 @@
     box-sizing: border-box;
 }
 
+ .backBut {
+    margin: 16px;
+    display: inline-block;
+    }
+
+.backBut input {
+        background: #ffffff;
+        color: #222;
+        border: 1px solid #ccc;
+        padding: 8px 14px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        cursor: pointer;
+        transition: background .15s ease, transform .08s ease;
+        font-weight: 600;
+        font-family: inherit;
+    }
+.backBut input:hover {
+        background: #f5f5f5;
+    }
+.backBut input:active {
+        transform: translateY(1px);
+    }
+
+
 body{
     display: flex;
     justify-content: center;
