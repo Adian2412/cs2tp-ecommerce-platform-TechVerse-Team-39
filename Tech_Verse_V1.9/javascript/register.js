@@ -26,6 +26,50 @@ document.addEventListener('DOMContentLoaded', ()=>{
     location.href = 'account.html';
   }
 
+  // PASSWORD STRENGTH METER
+  const pw = document.getElementById('reg-password');
+  const text = document.getElementById('pw-strength-text');
+  const bar  = document.getElementById('pw-strength-bar');
+
+  pw.addEventListener('input', () => {
+    const v = pw.value;
+    let strength = 0;
+
+    if (v.length >= 8) strength++;
+    if (/[A-Z]/.test(v)) strength++;
+    if (/[0-9]/.test(v)) strength++;
+    if (/[^A-Za-z0-9]/.test(v)) strength++;
+
+    switch (strength) {
+      case 0:
+        text.textContent = "";
+        bar.style.width = "0";
+        bar.style.background = "red";
+        break;
+      case 1:
+        text.textContent = "Weak";
+        bar.style.width = "25%";
+        bar.style.background = "red";
+        break;
+      case 2:
+        text.textContent = "Fair";
+        bar.style.width = "50%";
+        bar.style.background = "orange";
+        break;
+      case 3:
+        text.textContent = "Good";
+        bar.style.width = "75%";
+        bar.style.background = "gold";
+        break;
+      case 4:
+        text.textContent = "Strong";
+        bar.style.width = "100%";
+        bar.style.background = "green";
+        break;
+    }
+  });
+
+ 
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     msg.textContent = '';
@@ -62,3 +106,4 @@ document.addEventListener('DOMContentLoaded', ()=>{
     msg.textContent = 'Registration failed — please complete all fields.';
   });
 });
+
