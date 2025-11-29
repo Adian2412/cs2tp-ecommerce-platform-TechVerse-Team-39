@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liked Products - Tech Verse</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/PP.css">
+  <link rel="stylesheet" href="css/liked.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <!-- Top nav -->
+  <div class="topnav">
+    <nav>
+      <li class="static" id="flag">flag</li>
+      <li class="static" id="phone-number">phone number</li>
+      <div class="nav-right">
+        <li id="nav-myaccount"><a href="account.html">My account</a></li>
+        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
+        <script src="javascript/geo-flag.js"></script>
+        <li id="nav-checkout"><a href="cart.html">Cart</a></li>
+      </div>
+    </nav>
+  </div>
+
+  <hr>
+
+  <!-- Mid nav -->
+  <div class="midnav">
+    <div class="logo">
+      <h1>Tech Verse</h1>
+    </div>
+
+    <nav class="left-of_search">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="customer.html">Browse</a></li>
+      <li><a href="contact.html">Contact us</a></li>
+      <li><a href="#about">About us</a></li>
+    </nav>
+
+    <div class="right_of_search">
+      <input type="text" placeholder="Search..🔍">
+      <ul class="right_of_search">
+        <!-- Heart icon links here -->
+        <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+        <li id="nav-cart">
+          <a href="cart.html">
+            <i class="fa-solid fa-basket-shopping"></i>
+            <span id="cart-count" class="cart-badge">0</span>
+          </a>
+        </li>
+        <li id="nav-user"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
+      </ul>
+      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+    </div>
+  </div>
+
+  <hr>
+
+  <main class="account-main">
+    <h2>Liked Products</h2>
+
+    <section class="panel-block">
+      <p class="muted">
+        These are the products you've liked.
+      </p>
+
+    
+      <div class="liked-empty muted" style="margin-top:20px;">
+        <p>You haven't liked any products yet.</p>
+        <p>Visit the <a href="customer.html">Browse</a> page and click the "♡ Like" button on a product.</p>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+</body>
+</html>
+
