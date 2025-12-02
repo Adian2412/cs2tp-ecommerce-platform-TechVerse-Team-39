@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - Tech Verse</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/PP.css">
+  <link rel="stylesheet" href="css/about.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <!-- Top nav -->
+  <div class="topnav">
+    <nav>
+      <li class="static" id="flag">flag</li>
+      <li class="static" id="phone-number">phone number</li>
+      <div class="nav-right">
+        <li id="nav-myaccount"><a href="account.html">My account</a></li>
+        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
+        <script src="javascript/geo-flag.js"></script>
+        <li id="nav-checkout"><a href="cart.html">Cart</a></li>
+      </div>
+    </nav>
+  </div>
+
+  <hr>
+
+  <!-- Mid nav -->
+  <div class="midnav">
+    <div class="logo">
+      <h1>Tech Verse</h1>
+    </div>
+
+    <nav class="left-of_search">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="customer.html">Browse</a></li>
+      <li><a href="contact.html">Contact us</a></li>
+      <li><a href="about.html">About us</a></li>
+    </nav>
+
+    <div class="right_of_search">
+      <input type="text" placeholder="Search..🔍">
+      <ul class="right_of_search">
+        <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+        <li id="nav-cart">
+          <a href="cart.html">
+            <i class="fa-solid fa-basket-shopping"></i>
+            <span id="cart-count" class="cart-badge">0</span>
+          </a>
+        </li>
+        <li id="nav-user"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
+      </ul>
+      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+    </div>
+  </div>
+
+  <hr>
+
+  <main class="account-main">
+    <h2>About Tech Verse</h2>
+
+    <section class="panel-block">
+      <!-- Intro section -->
+      <div class="about-intro">
+        <p class="muted">
+          Tech Verse is a modern e-commerce platform for consumer electronics, designed to make discovering and purchasing technology simple, secure, and enjoyable. Built around a futuristic, universal brand identity, Tech Verse blends cosmic-inspired visuals with clear navigation to create an accessible experience for everyone.
+        </p>
+        <p>
+          Our vision is to make all technology accessible to everyone and anyone through sustainable practice and a secure online platform. Tech Verse is aimed at students, professionals, and tech enthusiasts aged 18–35 who want a clean, trusted place to explore the latest devices.
+        </p>
+      </div>
+
+      <!-- Grid of info cards -->
+      <div class="about-grid">
+        <div class="about-card">
+          <h3>Our Mission</h3>
+          <p class="muted">
+            Our mission is to deliver a seamless and futuristic shopping experience by combining accessibility, visual clarity, and strong brand identity. We focus on usability, consistent layouts, and fast performance so that customers can find what they need without friction.
+          </p>
+        </div>
+
+        <div class="about-card">
+          <h3>What We Offer</h3>
+          <ul>
+            <li>Five key product lines: laptops, smartphones & accessories, smart home devices, audio, and gaming equipment.</li>
+            <li>Product browsing and search by category and price.</li>
+            <li>Secure customer accounts with registration, login, and password management.</li>
+            <li>Basket management, checkout with order confirmation, and order history.</li>
+            <li>Product reviews and ratings to help users make confident decisions.</li>
+            <li>Features such as wish lists and liked products to save items for later.</li>
+          </ul>
+        </div>
+
+        <div class="about-card">
+          <h3>Why Tech Verse?</h3>
+          <p class="muted">
+            Tech Verse is built with security, performance, and accessibility at its core. We follow a clean, consistent interface with electric purple and cosmic blue highlights, space-black contrast, and readable white text to reflect our “Verse” identity while keeping every page easy to use and understand.
+          </p>
+          <p class="muted">
+            Behind the scenes, the platform is designed with secure development practices, GDPR awareness, and a focus on fast page loads so the experience feels both modern and reliable.
+          </p>
+        </div>
+      </div>
+
+      <!-- Project note / footer text -->
+      <div class="about-footer-text">
+        <p class="muted">
+          Tech Verse is a student-built project While it is not a live commercial store, it demonstrates how a fully functional, secure, and user-centred electronics e-commerce platform can be designed and implemented using HTML, Laravel, MySQL, and modern UI principles.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+</body>
+</html>
