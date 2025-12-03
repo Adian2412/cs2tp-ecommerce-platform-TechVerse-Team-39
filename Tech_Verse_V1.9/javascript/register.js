@@ -71,6 +71,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
  
   form.addEventListener('submit', async (e)=>{
+
+   	// CAPTCHA CHECK
+	const captcha = document.getElementById('captcha-box');
+	if (!captcha.checked) {
+		e.preventDefault();
+		msg.textContent = "Please complete the CAPTCHA.";
+		return;
+	}
+   
     e.preventDefault();
     msg.textContent = '';
     const payload = { first_name: first.value.trim(), last_name: last.value.trim(), email: email.value.trim(), password: password.value };
@@ -106,4 +115,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
     msg.textContent = 'Registration failed — please complete all fields.';
   });
 });
+
 
