@@ -180,3 +180,35 @@ body{
 .input_box.half {
     width: 50%;
 }
+
+/* CAPTCHA box */
+#captcha {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin: 16px 0;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+    background-color: #f9f9f9;
+}
+
+#captcha:hover {
+    border-color: #888;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+#captcha-box {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+#captcha label {
+    font-family: "Aptos";
+    font-size: 15px;
+    color: black;
+    cursor: pointer;
+    user-select: none;
+}
