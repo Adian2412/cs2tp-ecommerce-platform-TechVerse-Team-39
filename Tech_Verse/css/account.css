@@ -1,0 +1,182 @@
+/* Account page styles extracted from inline markup */
+.account-main{
+  max-width:1000px;margin:30px auto;padding:0 20px;font-family:"Aptos",sans-serif
+}
+.account-main h2{
+  margin-bottom:14px
+}
+.account-panel{
+  display:flex;gap:20px;flex-wrap:wrap
+}
+.panel-block{
+  flex:1;min-width:260px
+}
+.panel-block label{
+  display:block;margin-top:8px;font-size:14px;color:#333
+}
+.panel-block input, .panel-block textarea{
+  width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-family:"Aptos"
+}
+.mt{
+  margin: top 8px;
+}
+.btn-primary{
+  margin-top:0;background:#156082;color:#fff;padding:8px 12px;border-radius:6px;border:none;cursor:pointer
+}
+
+/* keep spacing for primary buttons inside panel blocks (Profile / Security) */
+.panel-block .btn-primary{
+  margin-top:10px
+}
+
+.actions{
+  margin-top:24px
+}
+.btn-ghost{
+  background:#eee;color:#000;padding:8px 12px;border-radius:6px;border:1px solid #ccc;cursor:pointer
+}
+
+/* place controls under the heading */
+.action-controls{
+  display:flex;gap:10px;align-items:center;margin-top:8px
+}
+/* ensure controls buttons are vertically even */
+.action-controls button{
+  margin:0
+}
+
+/* Account listings */
+.my-listings{
+  margin-top:18px
+}
+.account-listings{
+  display:flex;flex-direction:column;gap:12px;margin-top:8px
+}
+.listing-card{
+  display:flex;gap:12px;align-items:flex-start;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;box-shadow:0 1px 3px rgba(0,0,0,0.04)
+}
+.listing-thumb{
+  width:84px;height:84px;object-fit:cover;border-radius:6px;background:#f6f6f6
+}
+.listing-info{
+  flex:1
+}
+.listing-title{
+  font-weight:700
+}
+.listing-price{
+  color:#156082;font-weight:600;margin-top:6px
+}
+.listing-meta{
+  font-size:13px;color:#666;margin-top:6px
+}
+.listing-actions{
+  display:flex;gap:8px;align-items:center;margin-top:8px
+}
+.tracking-input{
+  padding:6px;border-radius:6px;border:1px solid #ccc
+}
+.tracking-input::placeholder{ 
+  color: #666; opacity: 1; 
+}
+.tracking-input:-ms-input-placeholder{ 
+  color: #666; 
+}
+.tracking-input::-ms-input-placeholder{
+   color: #666; 
+  }
+
+/* spacing for delete button in listing actions */
+.listing-actions .btn-remove{ 
+  margin-left:8px; 
+}
+
+/* style for delete action to match site theme */
+.listing-actions .btn-remove{
+  background:transparent;
+  border:1px solid rgba(185,28,28,0.12);
+  color:#b91c1c;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.listing-actions .btn-remove:hover{ 
+  background:rgba(185,28,28,0.04);
+ }
+.listing-actions .btn-remove[disabled]{
+   opacity:0.6; cursor:not-allowed; 
+  }
+
+/* snackbar specific tweaks when shown from account page */
+#tv-undo-snackbar{
+  max-width:360px; min-width:220px; z-index:9999;
+ }
+#tv-undo-snackbar .btn-ghost{
+   background:transparent; border:1px solid rgba(255,255,255,0.12); color:#fff; 
+  }
+#tv-undo-snackbar .btn-remove{
+   background:transparent; border:none; color:#fff; font-size:18px;
+   }
+.btn-small{
+  padding:6px 8px;border-radius:6px;border:none;background:#156082;color:#fff;cursor:pointer
+}
+.muted{
+  color:#666
+}
+
+/* Orders section */
+.orders-section{
+  margin-top:20px
+}
+.placed-orders{
+  display:flex;flex-direction:column;gap:12px;margin-top:8px
+}
+
+.order-card{
+  display:flex;flex-direction:column;gap:8px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;box-shadow:0 1px 3px rgba(0,0,0,0.04)
+}
+.order-head{
+  display:flex;justify-content:space-between;align-items:center;gap:12px
+}
+.order-id{
+  font-weight:700
+}
+.order-meta{
+  font-size:13px;color:#666
+}
+.order-items{
+  display:flex;gap:10px;align-items:center;margin-top:6px
+}
+.order-thumb{
+  width:64px;height:64px;object-fit:cover;border-radius:6px;background:#f6f6f6
+}
+.order-info{
+  flex:1
+}
+.order-status{
+  padding:6px 8px;border-radius:999px;font-weight:600;font-size:13px
+}
+.status-delivered{
+  background:#e6fffa;color:#065f46;border:1px solid rgba(6,95,70,0.08)
+}
+.status-transit{
+  background:#fffbeb;color:#92400e;border:1px solid rgba(146,64,14,0.06)
+}
+.status-out{
+  background:#eef2ff;color:#3730a3;border:1px solid rgba(55,48,163,0.06)
+}
+.order-actions{
+  display:flex;gap:8px;margin-top:8px
+}
+.btn-return{
+  background:#fff;border:1px solid #156082;color:#156082;padding:8px 10px;border-radius:6px;cursor:pointer
+}
+.btn-view{
+  background:#156082;color:#fff;padding:8px 10px;border-radius:6px;border:none;cursor:pointer
+}
+
+/* Small responsive tweak */
+@media (max-width:640px){
+  .account-panel{flex-direction:column}
+}

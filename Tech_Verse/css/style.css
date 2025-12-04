@@ -1,0 +1,294 @@
+@font-face {
+    font-family: "Aptos";
+    src: url('../fonts/Aptos.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+*{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+
+body{
+    position: relative;
+    height: auto;
+    width: auto;
+}
+
+/* Use Aptos as the global site font */
+body, input, button, select, textarea {
+    font-family: "Aptos", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+
+.topnav{
+    margin: 0;
+    overflow:hidden;
+}
+
+
+.topnav li{
+    float: left;    
+    text-align: center;
+    text-decoration: none;
+    list-style: none;
+    padding: 14px 16px;
+    font-family: "Aptos";
+    
+} /*list decoration and sets the phone number and flag to the left*/
+
+.topnav a{
+    text-decoration: none;
+    color: black;
+    
+} /*link decoration*/
+
+.topnav .nav-right{
+    float: right;
+    padding: 10px;
+} /*sets links to the right*/
+
+.topnav a:hover{
+    text-decoration: underline;
+}
+
+/*navbar config*/
+
+.logo{
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    margin: 0;
+    padding: 0 10px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+
+.midnav input[type=text]{
+    text-align: left;
+    padding: 9px;
+    overflow: visible;
+    border-radius: 120px;
+    border-color: black;
+    background: #156082;
+    font-size: 15px;
+    color: white;
+    border: none;
+}
+
+::placeholder{
+    text-align: center;
+    color: white;
+}
+
+.midnav{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.midnav .right_of_search{
+    position: static;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto; /* push to the right edge */
+    margin-right: 10px;
+}
+
+.midnav .left-of_search{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-size: 18px;
+}
+.midnav li{
+    list-style: none;
+    text-align: center;
+    padding: 10px 5px;
+    font-family: "Aptos";
+    display: inline-block;
+}
+
+.midnav a{
+    text-decoration: none;
+    color: black;
+    
+}
+
+.midnav a:hover{
+    text-decoration: underline;
+}
+
+
+main{
+    position: relative;
+    top: 400px;
+    font-size: 100px;
+    text-align: center;
+}
+
+.graphic{
+    position: relative;
+    bottom: 150px;
+}
+
+
+button{
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--tv-accent, #156082);
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background .12s, transform .06s, box-shadow .06s;
+}
+
+button:hover{
+    filter:brightness(0.95);
+    transform: translateY(-2px);
+}
+
+button a{
+    text-decoration: none;
+    color: black;
+
+}
+
+.lowernav{
+    position: absolute;
+    bottom: 40px;
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+    background: transparent;
+    margin-top: 90px;
+    position: relative;
+    text-align: center;
+}
+
+.lowernav .btn-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.lowernav .lower-btn {
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #ccc;
+    background: #156082;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background .15s, transform .08s;
+}
+
+.lowernav .lower-btn:hover {
+    background: #f2f2f2;
+    transform: translateY(-2px);
+}
+
+#signin{
+    margin-left: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: background .12s, transform .06s;
+    color: white;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-block;
+    font-family: "Aptos";
+    text-decoration: none;
+    line-height: 1;
+}
+
+#signin:hover{
+    background-color: white;
+    transform: translateY(-2px);
+    color: black;
+}
+
+/* country flag in topnav */
+.country-flag{font-size:18px;display:inline-flex;align-items:center;gap:6px}
+.country-flag img{width:20px;height:14px;display:inline-block}
+
+/* Minimal header: remove list bullets and ensure inline layout for flag */
+.minimal-header nav{padding:0;margin:0}
+.minimal-header nav li{list-style:none;display:inline-block;margin:0;padding:0;vertical-align:middle}
+
+/* cart badge near cart icon (copied from PP.css for consistent design) */
+.cart-badge{
+    display:inline-block;
+    min-width:18px;
+    height:18px;
+    line-height:18px;
+    padding:0 5px;
+    border-radius:10px;
+    background:#f5b301;
+    color:#111;
+    font-size:12px;
+    font-weight:600;
+    margin-left:6px;
+}
+
+/* Top CTA on the homepage - make anchor look like original button */
+.top-btn{
+    display:inline-block;
+    padding: 0.8rem 1.4rem;
+    background: var(--tv-accent, #156082);
+    color: white;
+    font-size: 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 1px solid rgba(0,0,0,0.06);
+    transition: background .12s, transform .06s;
+}
+.top-btn:hover{ background:#0f5e78; transform: translateY(-2px); }
+
+/* Site-wide button helpers used by other components */
+.btn-primary{background:var(--tv-accent, #156082);color:#fff;border:1px solid transparent;padding:10px 14px;border-radius:8px}
+.btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;padding:8px 12px;border-radius:8px}
+.btn-remove{background:transparent;border:1px solid #f3c2c2;color:#b91c1c;padding:6px 8px;border-radius:6px}
+.btn-remove:hover{ background:#fff5f5; }
+
+/* Undo snackbar core style (global) */
+#tv-undo-snackbar{ font-family:inherit; display:flex; align-items:center; gap:10px; padding:10px 12px; box-shadow:0 8px 24px rgba(0,0,0,0.18); border-radius:10px; }
+#tv-undo-snackbar div{ color:#fff; }
+#tv-undo-snackbar .btn-ghost{ background:transparent; border:1px solid rgba(255,255,255,0.18); color:#fff; padding:6px 10px; border-radius:6px; }
+#tv-undo-snackbar .btn-ghost:hover{ filter:brightness(1.1); }
+#tv-undo-snackbar .btn-remove{ background:transparent; border:none; color:#fff; font-size:18px; padding:0 6px; }
+.btn-disabled{background:#ddd;color:#888;border-color:#d0d0d0;cursor:not-allowed}
+
+/* Ensure lower-nav anchors inherit button appearance when used as anchors */
+.lowernav .lower-btn{
+    display: inline-block;
+    text-decoration: none;
+    color: white;
+}
+.lowernav .lower-btn:hover{ color: black; }
+
+/* Small layout tweak for the top button container */
+.top-btn-container{ margin: 18px 0 8px 0; text-align:center }
+
+

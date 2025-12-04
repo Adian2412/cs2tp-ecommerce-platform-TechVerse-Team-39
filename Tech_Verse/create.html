@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Verse</title>
+    <link rel="stylesheet" href="css/create.css">
+    <!-- TODO: server should inject CSRF token meta when available -->
+    <meta name="csrf-token" content="">
+</head>
+<body>
+    <div class="backBut">
+        <input type="button" value="back" onclick="history.back()">
+    </div>
+
+    
+     <div class="logo">
+        <h1>Tech Verse</h1>
+    </div>
+
+    <div class="wrapper">
+        <form id="register-form" action="" method="post">
+            <h1>Create an account</h1>
+
+            <div class="name_row">
+                <div class="input_box half">
+                    <input id="reg-first" name="first_name" type="text" placeholder="First Name" required>
+                </div>
+                <div class="input_box half">
+                    <input id="reg-last" name="last_name" type="text" placeholder="Surname" required>
+                </div>
+            </div>
+
+            <div class="input_box">
+                <input id="reg-email" name="email" type="email" placeholder="Email" required>
+            </div>
+
+            <div class="input_box">
+                <input id="reg-password" name="password" type="password" placeholder="Password" required>
+            </div>
+
+            <div class="remember_forgot">
+                <p>By selecting create account you are consenting to...</p>
+            </div>
+
+            <div id="pw-strength-text" style="margin:4px 0;font-size:14px;"></div>
+            <div id="pw-strength-bar" style="height:6px;width:0;background:red;transition:0.3s;"></div>
+			<br>
+
+			<div id="captcha">
+			<input type="checkbox" id="captcha-box">
+			<label for="captcha-box">I'm not a robot</label>
+			</div>
+			
+			<br>
+            <button type="submit" class="button">Create account</button>
+            <div id="register-msg" style="margin-top:8px;color:#d00"></div>
+        </form>
+    </div>
+    <script src="javascript/register.js"></script>
+</body>
+</html>
+

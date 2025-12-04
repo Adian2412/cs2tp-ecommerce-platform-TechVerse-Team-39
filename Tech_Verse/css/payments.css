@@ -1,0 +1,60 @@
+
+
+:root{
+    --accent:#156082;--muted:#6b7280;--bg:#f6f8fb;--card:#ffffff;--radius:10px
+}
+body{
+    background:var(--bg);font-family:"Aptos", Inter, system-ui, Arial, sans-serif;color:#0b1220;margin:0
+}
+.account-main{
+    max-width:900px;margin:28px auto;padding:0 16px
+}
+.account-main h2{
+    font-size:clamp(20px,2.8vw,28px);margin-bottom:12px
+}
+.panel-block{
+    background:var(--card);border-radius:var(--radius);padding:14px;margin:12px 0;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+.payment-methods{display:flex;gap:12px;flex-wrap:wrap}
+.method{
+    flex:1 1 140px;padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);background:#fff;min-height:56px;display:flex;flex-direction:column;justify-content:flex-start
+}
+.method .brand{
+    font-weight:700;color:var(--accent);font-size:clamp(13px,1.1vw,15px)}
+.method .muted{
+    color:var(--muted);font-size:clamp(11px,0.9vw,13px)
+}
+.payment-methods .method{
+    padding:8px;min-height:56px
+}
+.security-list{
+    color:var(--muted);font-size:14px
+}
+
+/* Collapse behavior and focus outline for accessibility */
+
+/* details/summary accordion styles */
+.collapsible{
+    border-radius:var(--radius);overflow:visible
+}
+.collapsible summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:0;margin:0;font-size:clamp(16px,2.2vw,18px);color:#0b1220
+}
+.collapsible summary::-webkit-details-marker{
+    display:none
+}
+.collapsible[open] summary{
+    font-weight:600
+}
+.collapsible .panel-content{
+    padding-top:10px;font-size:clamp(13px,1.6vw,15px);line-height:1.45
+}
+
+/* Remove bullet points for the protection details panel */
+.panel-block.no-bullets ul{
+    list-style:none;margin:8px 0 0 0;padding-left:0
+}
+.panel-block.no-bullets ul li{
+    padding-left:0;margin:6px 0
+}
+
+

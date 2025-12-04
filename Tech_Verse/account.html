@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account - Tech Verse</title>
+  <link rel="stylesheet" href="css/PP.css">
+  <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+</head>
+<body class="window">
+
+  <div class="midnav">
+    <div class="logo"><h1>Tech Verse</h1></div>
+    <nav class="left-of_search">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="customer.html">Browse</a></li>
+      <li><a href="contact.html">Contact us</a></li>
+      <li><a href="aboutus.html">About us</a></li>
+    </nav>
+    <div class="right_of_search">
+      <input type="text" placeholder="Search..🔍">
+         <ul class="right_of_search">
+           <li><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+           <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
+         </ul>
+      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+    </div>
+    <hr>
+  </div>
+
+  <main class="account-main">
+    <h2>Account Management</h2>
+    <section class="account-panel">
+      <div class="panel-block">
+        <h3>Profile</h3>
+        <label>Name</label>
+        <input id="acc-name" type="text">
+        <label class="mt">Email</label>
+        <input id="acc-email" type="email">
+        <button id="save-account" class="btn-primary">Save</button>
+      </div>
+
+      <div class="panel-block">
+        <h3>Security</h3>
+        <label>Current Password</label>
+        <input id="acc-curpass" type="password">
+        <label class="mt">New Password</label>
+        <input id="acc-newpass" type="password">
+        <button id="change-pass" class="btn-primary">Change Password</button>
+      </div>
+    </section>
+
+    <section class="actions">
+      <h3>Account Actions</h3>
+      <div class="action-controls">
+        <button id="sell-product" class="btn-primary">Sell a product</button>
+        <button id="signout" class="btn-ghost">Sign Out</button>
+      </div>
+    </section>
+
+    <section class="my-listings">
+      <h3>My Listings</h3>
+      <div id="account-listings" class="account-listings">
+        <p class="muted">You have no listings yet.</p>
+      </div>
+    </section>
+
+    <section class="orders-section">
+      <h3>Placed Orders</h3>
+      <div id="placed-orders" class="placed-orders">
+        <p class="muted">You have no orders yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="javascript/account.js"></script>
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+</body>
+</html>
