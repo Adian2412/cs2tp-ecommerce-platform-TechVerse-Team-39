@@ -1,9 +1,4 @@
 <?php
-
-//trying to see if this shows on github
-
-namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
