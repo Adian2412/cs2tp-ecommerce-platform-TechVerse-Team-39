@@ -12,7 +12,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(['message' => 'Not implemented yet']);
     }
 
     /**
@@ -20,7 +20,8 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //validate and create category
+        return response()->json(['message' => 'Category created'], 201);
     }
 
     /**
@@ -28,7 +29,7 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return response()->json(['message' => 'Not implemented yet']);
     }
 
     /**
@@ -36,7 +37,7 @@ class CategoryController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        return response()->json(['message' => 'Category updated']);
     }
 
     /**
@@ -44,6 +45,7 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        //delete category
+        return response()->json(['message' => 'Category deleted']); 
     }
 }
