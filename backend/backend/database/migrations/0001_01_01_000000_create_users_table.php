@@ -18,6 +18,7 @@ return new class extends Migration
             #$table->timestamp('email_verified_at')->nullable(); //verification method not implemented yet
             $table->string('password_hash');
             $table->enum('role', ['customer','staff','admin'])->default('customer');
+            //remember me tick box
             $table->rememberToken();
             $table->timestamps();
         });
