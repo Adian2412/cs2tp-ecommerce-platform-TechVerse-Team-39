@@ -12,7 +12,13 @@ class ProductImageController extends Controller
      */
     public function index()
     {
-        //
+        //this section is optional and not currently included in the database but i wrote some code for future implementation
+        // $productId = $request->query('product_id');
+        // $images = $productId 
+        //     ? ProductImage::where('product_id', $productId)->get() 
+        //     : ProductImage::all();
+
+        // return response()->json($images);
     }
 
     /**
