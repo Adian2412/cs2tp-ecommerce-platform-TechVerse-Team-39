@@ -22,7 +22,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //Admin only: validate and create product + optionally variants/attributes
+        //for the admin ->validate and create product + optionally variants/attributes
         return response()->json(['message' => 'Product created'], 201);
     }
 
