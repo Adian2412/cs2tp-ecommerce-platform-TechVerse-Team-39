@@ -13,20 +13,15 @@ return new class extends Migration
     {
         Schema::create('product_attributes', function (Blueprint $table) {
             $table->id();
-            // $table->string('uid')->primary(); // optional custom primary key
           
           // Foreign key linking attribute to a product
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-
             $table->string('attribute_name');
             $table->string('attribute_value');
-
+            
             $table->timestamps();
           
           
-          
-          
-            $table->timestamps();
         });
     }
 
