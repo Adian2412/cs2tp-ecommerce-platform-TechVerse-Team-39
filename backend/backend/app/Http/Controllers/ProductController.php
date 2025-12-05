@@ -12,7 +12,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        //add pagination, filters, eager loading
+        $products = Product::with('variants')->paginate(20);
+        return response()->json($products);
     }
 
     /**
@@ -20,7 +22,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //Admin only: validate and create product + optionally variants/attributes
+        return response()->json(['message' => 'Product created'], 201);
     }
 
     /**
