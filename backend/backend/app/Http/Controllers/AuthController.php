@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // POST /auth/register
+   
     public function register(Request $request)
     {
         // add validate input (name, email, password)
@@ -22,7 +22,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'register endpoint ready'], 201);
     }
 
-    // POST /auth/login
+   
     public function login(Request $request)
     {
         // add: validate credentials
@@ -32,14 +32,14 @@ class AuthController extends Controller
         return response()->json(['message' => 'login endpoint ready']);
     }
 
-    // POST /authentication/logout
+    
     public function logout(Request $request)
     {
         // add: revoke token
         return response()->json(['message' => 'logged out']);
     }
 
-    // GET /authentication/me
+    
     public function me(Request $request)
     {
         return response()->json($request->user());
