@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Seller Dashboard - Tech Verse</title>
+  <title>Admin Dashboard - Tech Verse</title>
   <link rel="stylesheet" href="css/PP.css">
   <link rel="stylesheet" href="css/seller.css">
   <link rel="stylesheet" href="css/auth.css">
@@ -33,40 +33,48 @@
   </div>
 
   <main class="seller-main">
-    <h2>Seller Dashboard</h2>
+    <h2>Admin Dashboard</h2>
     <p id="auth-status">Checking authentication...</p>
-    <div id="seller-content" style="display:none;">
-      <p>Upload new items to list them for sale.</p>
+    <div id="admin-content" style="display:none;">
+      <p>Manage Tech Verse platform settings and users.</p>
 
-      <form id="listing-form" class="listing-form">
-      <label>Title</label>
-      <input id="item-title" required type="text" class="form-input">
+      <div class="admin-panel">
+        <div class="panel-section">
+          <h3>User Management</h3>
+          <p>View and manage all users on the platform.</p>
+          <button class="btn-primary" onclick="location.href='admin-users.html'">Manage Users</button>
+        </div>
 
-      <label>Price</label>
-      <input id="item-price" required type="text" class="form-input">
+        <div class="panel-section">
+          <h3>Product Management</h3>
+          <p>Review and moderate product listings.</p>
+          <button class="btn-primary" onclick="location.href='admin-products.html'">Manage Products</button>
+        </div>
 
-      <label>Description</label>
-      <textarea id="item-desc" rows="5" class="form-input"></textarea>
+        <div class="panel-section">
+          <h3>Order Management</h3>
+          <p>View and manage all orders on the platform.</p>
+          <button class="btn-primary" onclick="location.href='admin-orders.html'">Manage Orders</button>
+        </div>
 
-      <label>Images (choose 1 or more)</label>
-      <input id="item-images" type="file" accept="image/*" multiple>
-      <label>Category</label>
-      <select id="item-category" class="form-input"></select>
-      <label>Quantity</label>
-      <input id="item-quantity" type="number" min="0" value="1" class="form-input">
-      <div id="preview" class="preview"></div>
+        <div class="panel-section">
+          <h3>Analytics</h3>
+          <p>View platform analytics and reports.</p>
+          <button class="btn-primary" onclick="location.href='admin-analytics.html'">View Analytics</button>
+        </div>
 
-      <button type="button" id="publish" class="btn-primary">Publish Listing</button>
-    </form>
-
-      <div id="seller-listings" class="seller-listings"></div>
+        <div class="panel-section">
+          <h3>System Settings</h3>
+          <p>Configure platform settings and maintenance.</p>
+          <button class="btn-primary" onclick="location.href='admin-settings.html'">System Settings</button>
+        </div>
+      </div>
     </div>
   </main>
 
-  <script src="javascript/auth.js"></script>
-  <script src="javascript/categories.js"></script>
-  <script src="javascript/seller.js"></script>
+  <script src="javascript/admin.js"></script>
   <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
   <script src="javascript/global-search.js"></script>
 </body>
 </html>

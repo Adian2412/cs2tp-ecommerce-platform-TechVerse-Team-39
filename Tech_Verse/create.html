@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
     <title>Tech Verse</title>
     <link rel="stylesheet" href="css/create.css">
     <!-- TODO: server should inject CSRF token meta when available -->
@@ -19,7 +20,7 @@
     </div>
 
     <div class="wrapper">
-        <form id="register-form" action="" method="post">
+        <form id="register-form" action="#" method="post" onsubmit="return false;">
             <h1>Create an account</h1>
 
             <div class="name_row">
@@ -39,13 +40,24 @@
                 <input id="reg-password" name="password" type="password" placeholder="Password" required>
             </div>
 
+            <div id="pw-strength-text" style="margin:4px 0;font-size:14px;"></div>
+            <div id="pw-strength-bar" style="height:6px;width:0;background:red;transition:0.3s;border-radius:3px;"></div>
+			<br>
+
+            <div class="input_box">
+                <input type="hidden" id="reg-role" name="role" value="customer">
+                <small style="color:#666;font-size:12px;">All customers can sell products on Tech Verse</small>
+            </div>
+
+            <!-- Hidden admin code field for developers -->
+            <div class="input_box" id="admin-code-container" style="display:none;">
+                <input id="reg-admin-code" name="admin_code" type="text" placeholder="Developer Admin Code" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:4px;font-size:16px;">
+                <small style="color:#666;font-size:12px;">Required for admin account creation</small>
+            </div>
+
             <div class="remember_forgot">
                 <p>By selecting create account you are consenting to...</p>
             </div>
-
-            <div id="pw-strength-text" style="margin:4px 0;font-size:14px;"></div>
-            <div id="pw-strength-bar" style="height:6px;width:0;background:red;transition:0.3s;"></div>
-			<br>
 
 			<div id="captcha">
 			<input type="checkbox" id="captcha-box">
@@ -58,6 +70,17 @@
         </form>
     </div>
     <script src="javascript/register.js"></script>
+    <script>
+        // Check for admin registration parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminReg = urlParams.get('admin') === 'true';
+
+        if (isAdminReg) {
+            // Show admin code field for admin registration
+            document.getElementById('admin-code-container').style.display = 'block';
+            document.getElementById('reg-role').value = 'admin';
+        }
+    </script>
 </body>
 </html>
 

@@ -10,13 +10,19 @@ class Product extends Model
     use HasFactory;
     protected $fillable = [
         'category_id',
+        'brand_id',
+        'user_id',
+        'sku',
         'name',
         'slug',
         'description',
-        'brand',   //string field instead of foreign key
+        'price',
+        'stock',
         'image_url',
-        'active',
-       
+        'tracking_link',
+        'is_sold',
+        'is_active',
+
     ];
 
 
@@ -27,6 +33,12 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    //each product belongs to a user (seller)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
      
 
@@ -60,7 +72,8 @@ class Product extends Model
     }
 
     protected $casts = [
-        'active' => 'boolean',
+        'is_active' => 'boolean',
+        'is_sold' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

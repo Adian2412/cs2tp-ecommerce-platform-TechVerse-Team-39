@@ -1,11 +1,35 @@
 // account page behavior extracted from inline script
-const accKey = 'techverse_account_v1';
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Resolve API base for deployed environments (supports meta tag or global override)
+  function tvApiBase(){
+    try{
+      const meta = document.querySelector('meta[name="tv-api-base"]');
+      const metaVal = meta && meta.content ? meta.content.trim() : '';
+      const override = (window.TV_API_BASE || window.__TV_API_BASE__ || metaVal || '').trim();
+      if(override) return override.replace(/\/+$/, '');
+    }catch(e){}
+    // default: same-origin
+    return '';
+  }
+  const API_BASE = tvApiBase();
   const nameEl = document.getElementById('acc-name');
   const emailEl = document.getElementById('acc-email');
-  const saved = localStorage.getItem(accKey);
-  if(saved){
-    try{const s=JSON.parse(saved); nameEl.value=s.name||''; emailEl.value=s.email||'';}catch(e){}
+  const roleEl = document.getElementById('acc-role');
+
+  // Get current user from authentication system
+  const currentUser = window.TechVerseAuth ? window.TechVerseAuth.getCurrentUser() : null;
+
+  if(currentUser){
+    nameEl.value = currentUser.username || '';
+    emailEl.value = currentUser.email || '';
+    if(roleEl) roleEl.textContent = currentUser.role || 'customer';
+  } else {
+    // Fallback to old system if no authenticated user
+    const accKey = 'techverse_account_v1';
+    const saved = localStorage.getItem(accKey);
+    if(saved){
+      try{const s=JSON.parse(saved); nameEl.value=s.name||''; emailEl.value=s.email||'';}catch(e){}
+    }
   }
   document.getElementById('save-account').addEventListener('click', ()=>{
     const obj={name:nameEl.value.trim(), email:emailEl.value.trim(), updated:Date.now()};
@@ -22,10 +46,21 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
   const signoutBtn = document.getElementById('signout');
   if(signoutBtn){
-    signoutBtn.addEventListener('click', ()=>{
-      // clear client-side auth flag (server auth will be handled by Laravel later)
-      try{ localStorage.removeItem('techverse_auth_user'); }catch(e){}
-      alert('Signed out (simulated).');
+    signoutBtn.addEventListener('click', async ()=>{
+      try{
+        // Try to logout from server
+        const apiBase = API_BASE;
+        await fetch(`${apiBase}/api/logout`, {
+          method: 'POST',
+          credentials: apiBase ? 'include' : 'same-origin'
+        });
+      }catch(e){
+        console.warn('Server logout failed:', e);
+      }
+
+      // Clear client-side auth
+      localStorage.removeItem('techverse_auth_user');
+      alert('Successfully signed out.');
       location.href='index.html';
     });
   }

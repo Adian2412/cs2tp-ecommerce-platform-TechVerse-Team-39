@@ -12,65 +12,65 @@
 */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Resolve API base for deployed environments (meta tag or global override)
+  function tvApiBase(){
+    try{
+      const meta = document.querySelector('meta[name="tv-api-base"]');
+      const metaVal = meta && meta.content ? meta.content.trim() : '';
+      const override = (window.TV_API_BASE || window.__TV_API_BASE__ || metaVal || '').trim();
+      if(override) return override.replace(/\/+$/, '');
+    }catch(e){}
+    return '';
+  }
+  const API_BASE = tvApiBase();
+
   const form = document.getElementById('login-form');
   const email = document.getElementById('login-email');
   const password = document.getElementById('login-password');
   const msg = document.getElementById('login-msg');
 
-  function devFallbackLogin(user){
-    // DEV fallback: store an auth marker so UI shows signed-in state
-    localStorage.setItem('techverse_auth_user', JSON.stringify(user));
-    // also store account record for demo purposes
-    localStorage.setItem('techverse_account_v1', JSON.stringify({name:user.name,email:user.email,updated:Date.now()}));
-    location.href = 'account.html';
-  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     msg.textContent = '';
     const payload = { email: email.value.trim(), password: password.value };
 
-    // Try server login endpoints (preferred when backend ready)
-    try {
-      // TODO: update the endpoint to match backend (e.g., '/login' or '/api/login')
-      const loginUrls = ['/api/login','/login'];
-      let resp = null;
-      for(const url of loginUrls){
-        try{
-          resp = await fetch(url, {
-            method: 'POST',
-            credentials: 'include', // include cookies for session-based auth
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        }catch(err){ resp = null; }
-        if(resp) break;
-      }
-
-      if(resp && resp.ok){
-        // Backend should return user info JSON or set a session cookie
-        try{
-          const data = await resp.json();
-          // If server returns user object, save locally for UI until server-side session takes over
-          if(data && data.user){
-            localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
-          } else if(data && data.name){
-            localStorage.setItem('techverse_auth_user', JSON.stringify(data));
-          }
-        }catch(e){ /* response not JSON - ignore */ }
-        location.href = 'account.html';
-        return;
-      }
-    } catch (err) {
-      console.warn('Server login failed or unreachable', err);
-    }
-
-    // Fallback local dev behavior: accept any non-empty credentials and store a demo user
-    if(payload.email && payload.password){
-      devFallbackLogin({ name: payload.email.split('@')[0] || payload.email, email: payload.email });
+    // Simple validation
+    if (!email.value.trim() || !password.value.trim()) {
+      msg.textContent = 'Please enter both email and password';
       return;
     }
 
-    msg.textContent = 'Login failed. Check your credentials.';
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value.trim())) {
+      msg.textContent = 'Please enter a valid email address';
+      return;
+    }
+
+    // Attempt real server login
+    try{
+      const resp = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: API_BASE ? 'include' : 'same-origin',
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok){
+        msg.style.color = '#d00';
+        msg.textContent = data.error || 'Login failed';
+        return;
+      }
+      if(data && data.user){
+        localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
+      }
+      msg.style.color = '#0a0';
+      msg.textContent = 'Login successful! Redirecting...';
+      setTimeout(() => location.href = 'index.html', 800);
+    }catch(err){
+      msg.style.color = '#d00';
+      msg.textContent = 'Network error. Please try again.';
+    }
   });
 });

@@ -102,13 +102,25 @@ body, input, button, select, textarea {
 
 .midnav .right_of_search{
     position: static;
-    font-size: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
     margin-left: auto; /* push to the right edge */
     margin-right: 10px;
 }
+
+/* Icon sizing/color for nav (Font Awesome kit) */
+.midnav .right_of_search i,
+.midnav .left-of_search i{
+    font-size: 20px;
+    color: black;
+    line-height: 1;
+}
+
+/* Ensure Font Awesome kit uses the correct font-face */
+.fa-solid{font-family:"Font Awesome 6 Free";font-weight:900;}
+.fa-regular{font-family:"Font Awesome 6 Free";font-weight:400;}
+.fa-brands{font-family:"Font Awesome 6 Brands";}
 
 .midnav .left-of_search{
     position: absolute;

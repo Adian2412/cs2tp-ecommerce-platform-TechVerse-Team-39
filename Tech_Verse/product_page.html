@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
     <title class="item">Tech verse</title>
     <link rel="stylesheet" href="css/PP.css">
     <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
@@ -20,6 +21,7 @@
         <nav class="left-of_search">
             <li><a href="index.html">Home</a></li>
             <li><a href="customer.html">Browse</a></li>
+            <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
             <li><a href="contact.html">Contact us</a></li>
             <li><a href="aboutus.html">About us</a></li>
         </nav>
@@ -27,9 +29,9 @@
         <div class="right_of_search">   
             <input type="text" placeholder="Search..🔍">
             <ul class="right_of_search">
-                <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+                <li id="nav-fav" style="display: none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
                 <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge">0</span></a></li>
-                <li id="nav-user"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
+                <li id="nav-user" style="display: none;"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
             </ul>
             <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
         </div>
@@ -89,6 +91,7 @@
     <script src="javascript/cart-badge.js"></script>
     <script src="javascript/product.js"></script>
     <script src="javascript/auth.js"></script>
+    <script src="javascript/global-search.js"></script>
     <div id="cart-toast" class="cart-toast" style="display:none">Added to cart</div>
 </body>
 </html>

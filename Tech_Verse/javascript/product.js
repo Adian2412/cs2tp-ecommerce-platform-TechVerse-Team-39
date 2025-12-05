@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // Resolve API base for deployed environments (meta tag or global override)
+  function tvApiBase(){
+    try{
+      const meta = document.querySelector('meta[name="tv-api-base"]');
+      const metaVal = meta && meta.content ? meta.content.trim() : '';
+      const override = (window.TV_API_BASE || window.__TV_API_BASE__ || metaVal || '').trim();
+      if(override) return override.replace(/\/+$/, '');
+    }catch(e){}
+    return '';
+  }
+  const API_BASE = tvApiBase();
+
   // Elements
   const stars = Array.from(document.querySelectorAll('#prodstar .star'));
   const reviewArea = document.getElementById('review-area');
@@ -46,18 +58,18 @@ document.addEventListener('DOMContentLoaded', function () {
   async function fetchProductFromServer() {
     // Expected server shape:
     // { id, name, price, description, reviews: [{rating, text, author, date}] }
-    const url = `/api/products/${encodeURIComponent(productId)}`;
-    const resp = await fetch(url, { credentials: 'same-origin' });
+    const url = `${API_BASE}/api/products/${encodeURIComponent(productId)}`;
+    const resp = await fetch(url, { credentials: API_BASE ? 'include' : 'same-origin' });
     if (!resp.ok) throw new Error('no-server');
     return resp.json();
   }
 
   async function postReviewToServer(review) {
     // POST { rating, text } -> returns created review object
-    const url = `/api/products/${encodeURIComponent(productId)}/reviews`;
+    const url = `${API_BASE}/api/products/${encodeURIComponent(productId)}/reviews`;
     const resp = await fetch(url, {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: API_BASE ? 'include' : 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: review.rating, text: review.text })
     });
@@ -85,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     try{
       const imgWrap = document.querySelector('.product_image');
       if(imgWrap){
-        const src = (data.images && data.images[0]) || 'images/placeholder.png';
+        const src = (data.images && data.images[0] && data.images[0].image_path) ? data.images[0].image_path : 'images/placeholder.png';
         imgWrap.innerHTML = `<img src="${src}" alt="${escapeHtml(data.name||'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
       }
     }catch(e){}
@@ -263,10 +275,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function postLikeToServer(like){
-    const url = `/api/products/${encodeURIComponent(productId)}/like`;
+    const url = `${API_BASE}/api/products/${encodeURIComponent(productId)}/like`;
     const resp = await fetch(url, {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: API_BASE ? 'include' : 'same-origin',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ like: !!like })
     });
@@ -276,10 +288,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   async function postWishlistToServer(add){
     // POST to current user's wishlist endpoint
-    const url = `/api/me/wishlist`;
+    const url = `${API_BASE}/api/me/wishlist`;
     const resp = await fetch(url, {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: API_BASE ? 'include' : 'same-origin',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ productId: productId, add: !!add })
     });
@@ -310,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateWishlistUI(wishlistFallback);
     // try server for authoritative state
     try{
-      const resp = await fetch(`/api/products/${encodeURIComponent(productId)}/state`, { credentials: 'same-origin' });
+      const resp = await fetch(`${API_BASE}/api/products/${encodeURIComponent(productId)}/state`, { credentials: API_BASE ? 'include' : 'same-origin' });
       if(resp.ok){
         const json = await resp.json();
         // server response shape: { liked: bool, inWishlist: bool }
@@ -395,10 +407,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function serverAddToCart(productId, qty){
-    const url = `/api/cart/add`;
+    const url = `${API_BASE}/api/cart/add`;
     const resp = await fetch(url, {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: API_BASE ? 'include' : 'same-origin',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ productId: productId, qty: qty })
     });
@@ -421,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function () {
           await serverAddToCart(productId, qty);
           // try to fetch updated cart count from server (optional)
           try{
-            const r = await fetch('/api/cart', { credentials: 'same-origin' });
+            const r = await fetch(`${API_BASE}/api/cart`, { credentials: API_BASE ? 'include' : 'same-origin' });
             if(r.ok){ const js = await r.json(); if(typeof js.count !== 'undefined'){ if(cartCountEl) cartCountEl.textContent = String(js.count); } }
           }catch(e){}
           showCartToast();

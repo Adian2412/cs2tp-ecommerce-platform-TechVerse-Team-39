@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="tv-api-base" content="http://127.0.0.1:8000">
+    <title>Test Product Ownership & Deletion</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .section { background: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 8px; }
+        .section h3 { margin-top: 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #156082; color: white; }
+        .btn-danger { background: #d00; color: white; }
+        .btn-success { background: #0a0; color: white; }
+        .btn-warning { background: #f90; color: white; }
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        input, select { padding: 8px; margin: 5px; width: 200px; }
+        .product-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .product-info { flex: 1; }
+        .product-actions button { margin-left: 5px; }
+        .owner-badge { background: #0a0; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
+        .not-owner-badge { background: #666; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
+        .server-toggle { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .server-toggle button.active { outline: 3px solid #000; }
+        #current-server { font-family: monospace; background: #333; color: #0f0; padding: 5px 10px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Product Ownership & Deletion</h1>
+    
+    <!-- Server Toggle Section -->
+    <div class="section" style="background: #e3f2fd;">
+        <h3>🔧 Server Configuration</h3>
+        <p>Select which server to test against:</p>
+        <div class="server-toggle">
+            <button class="btn-primary" onclick="setServer('local')" id="btn-local">🏠 Local (127.0.0.1:8000)</button>
+            <button class="btn-success" onclick="setServer('deployed')" id="btn-deployed">🌐 Deployed Server</button>
+            <button class="btn-warning" onclick="setServer('custom')" id="btn-custom">⚙️ Custom</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <input type="text" id="custom-server" placeholder="Custom URL" style="width: 300px;" value="http://127.0.0.1:8000">
+            <button class="btn-primary" onclick="applyCustomServer()">Apply Custom</button>
+        </div>
+        <p style="margin-top: 10px;">Current API: <span id="current-server">...</span></p>
+    </div>
+
+    <div class="section">
+        <h3>📋 Current User Status</h3>
+        <div id="user-status" class="status info">Checking...</div>
+        <button class="btn-primary" onclick="checkAuth()">🔄 Refresh Status</button>
+    </div>
+
+    <div class="section">
+        <h3>🔐 1. Login / Register (Required First)</h3>
+        <p>You need to be logged in to test product ownership.</p>
+        <div>
+            <input type="email" id="login-email" placeholder="Email" value="test@example.com">
+            <input type="password" id="login-password" placeholder="Password" value="password123">
+            <button class="btn-primary" onclick="login()">Login</button>
+            <button class="btn-success" onclick="register()">Register New User</button>
+            <button class="btn-warning" onclick="logout()">Logout</button>
+        </div>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>📦 2. Create a Test Product (As Current User)</h3>
+        <p>Create a product to test ownership - it will be owned by the logged-in user.</p>
+        <div>
+            <input type="text" id="product-name" placeholder="Product Name" value="My Test Product">
+            <input type="number" id="product-price" placeholder="Price" value="29.99">
+            <button class="btn-success" onclick="createProduct()">Create Product</button>
+        </div>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>📋 3. View My Products Only (Seller Dashboard)</h3>
+        <p>This uses <code>/api/my-products</code> - should only show YOUR products.</p>
+        <button class="btn-primary" onclick="loadMyProducts()">Load My Products</button>
+        <div id="my-products"></div>
+    </div>
+
+    <div class="section">
+        <h3>🌍 4. View All Products (Browse Page)</h3>
+        <p>This uses <code>/api/products</code> - shows all available products from all sellers.</p>
+        <button class="btn-primary" onclick="loadAllProducts()">Load All Products</button>
+        <div id="all-products"></div>
+    </div>
+
+    <div class="section">
+        <h3>🧪 5. Test Delete (Ownership Check)</h3>
+        <p>Try to delete a product. Should only work if you own it.</p>
+        <div>
+            <input type="number" id="delete-id" placeholder="Product ID to delete">
+            <button class="btn-danger" onclick="deleteProduct()">🗑️ Delete Product</button>
+        </div>
+        <div id="delete-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>🧪 6. Test Update (Ownership Check)</h3>
+        <p>Try to update a product. Should only work if you own it.</p>
+        <div>
+            <input type="number" id="update-id" placeholder="Product ID to update">
+            <input type="text" id="update-name" placeholder="New Name">
+            <button class="btn-warning" onclick="updateProduct()">✏️ Update Product</button>
+        </div>
+        <div id="update-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>📝 API Response Log</h3>
+        <pre id="log">API responses will appear here...</pre>
+    </div>
+
+    <script>
+        // Server configuration
+        const SERVERS = {
+            local: 'http://127.0.0.1:8000',
+            deployed: 'https://cs2team39.cs2410-web01pvm.aston.ac.uk'
+        };
+        
+        // Get API base - check localStorage first, then meta tag
+        let API_BASE = localStorage.getItem('tv_test_api_base') || 
+                       document.querySelector('meta[name="tv-api-base"]')?.content?.trim() || 
+                       SERVERS.local;
+        
+        function setServer(type) {
+            if (type === 'local') {
+                API_BASE = SERVERS.local;
+            } else if (type === 'deployed') {
+                API_BASE = SERVERS.deployed;
+            } else if (type === 'custom') {
+                API_BASE = document.getElementById('custom-server').value.trim();
+            }
+            localStorage.setItem('tv_test_api_base', API_BASE);
+            updateServerDisplay();
+            log('SERVER CHANGED', { server: API_BASE });
+        }
+        
+        function applyCustomServer() {
+            const custom = document.getElementById('custom-server').value.trim();
+            if (custom) {
+                API_BASE = custom;
+                localStorage.setItem('tv_test_api_base', API_BASE);
+                updateServerDisplay();
+                log('CUSTOM SERVER SET', { server: API_BASE });
+            }
+        }
+        
+        function updateServerDisplay() {
+            document.getElementById('current-server').textContent = API_BASE;
+            document.getElementById('custom-server').value = API_BASE;
+            
+            // Update button states
+            document.getElementById('btn-local').classList.toggle('active', API_BASE === SERVERS.local);
+            document.getElementById('btn-deployed').classList.toggle('active', API_BASE === SERVERS.deployed);
+            document.getElementById('btn-custom').classList.toggle('active', 
+                API_BASE !== SERVERS.local && API_BASE !== SERVERS.deployed);
+        }
+        
+        function log(message, data) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.textContent = `[${timestamp}] ${message}\n${JSON.stringify(data, null, 2)}\n\n` + logEl.textContent;
+        }
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.className = `status ${type}`;
+            el.innerHTML = message;
+        }
+
+        // Check current auth status
+        async function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('techverse_auth_user') || 'null');
+            if (user) {
+                showStatus('user-status', `✅ Logged in as: <strong>${user.username}</strong> (ID: ${user.id}, Role: ${user.role})`, 'success');
+            } else {
+                showStatus('user-status', '❌ Not logged in. Please login or register first.', 'error');
+            }
+        }
+
+        // Login
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('LOGIN', data);
+                
+                if (resp.ok && data.user) {
+                    localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
+                    showStatus('auth-result', `✅ Logged in as ${data.user.username}!`, 'success');
+                    checkAuth();
+                } else {
+                    showStatus('auth-result', `❌ Login failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log('LOGIN ERROR', e.message);
+                showStatus('auth-result', `❌ Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Register
+        async function register() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const username = email.split('@')[0] + '_' + Date.now().toString().slice(-4);
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role: 'customer' }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('REGISTER', data);
+                
+                if (resp.ok && data.user) {
+                    localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
+                    showStatus('auth-result', `✅ Registered and logged in as ${data.user.username}!`, 'success');
+                    checkAuth();
+                } else {
+                    showStatus('auth-result', `❌ Registration failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log('REGISTER ERROR', e.message);
+                showStatus('auth-result', `❌ Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/api/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (e) {}
+            localStorage.removeItem('techverse_auth_user');
+            showStatus('auth-result', '✅ Logged out', 'info');
+            checkAuth();
+        }
+
+        // Create product
+        async function createProduct() {
+            const name = document.getElementById('product-name').value;
+            const price = document.getElementById('product-price').value;
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, 
+                        price: parseFloat(price), 
+                        description: 'Test product created for ownership testing',
+                        category: 'electronics',
+                        quantity: 10
+                    }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('CREATE PRODUCT', data);
+                
+                if (resp.ok) {
+                    const productId = data.product?.id || 'unknown';
+                    showStatus('create-result', `✅ Product created! ID: ${productId}`, 'success');
+                    document.getElementById('delete-id').value = productId;
+                    document.getElementById('update-id').value = productId;
+                } else {
+                    showStatus('create-result', `❌ Failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log('CREATE ERROR', e.message);
+                showStatus('create-result', `❌ Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Load my products (seller dashboard)
+        async function loadMyProducts() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/my-products`, {
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('MY PRODUCTS', data);
+                
+                const container = document.getElementById('my-products');
+                if (resp.ok && data.data && data.data.length > 0) {
+                    container.innerHTML = `<p class="status success">Found ${data.data.length} products that YOU own:</p>`;
+                    data.data.forEach(p => {
+                        container.innerHTML += `
+                            <div class="product-card">
+                                <div class="product-info">
+                                    <strong>${p.name}</strong> (ID: ${p.id})<br>
+                                    Price: £${p.price} | User ID: ${p.user_id}
+                                    <span class="owner-badge">YOUR PRODUCT</span>
+                                </div>
+                                <div class="product-actions">
+                                    <button class="btn-warning" onclick="document.getElementById('update-id').value=${p.id}">Edit</button>
+                                    <button class="btn-danger" onclick="document.getElementById('delete-id').value=${p.id}">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else if (resp.status === 401) {
+                    container.innerHTML = '<p class="status error">❌ Not authenticated. Please login first.</p>';
+                } else {
+                    container.innerHTML = '<p class="status info">No products found. Create one first!</p>';
+                }
+            } catch (e) {
+                log('MY PRODUCTS ERROR', e.message);
+                document.getElementById('my-products').innerHTML = `<p class="status error">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        // Load all products (browse)
+        async function loadAllProducts() {
+            const currentUser = JSON.parse(localStorage.getItem('techverse_auth_user') || 'null');
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/products`, {
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('ALL PRODUCTS', data);
+                
+                const container = document.getElementById('all-products');
+                if (resp.ok && data.data && data.data.length > 0) {
+                    container.innerHTML = `<p class="status success">Found ${data.data.length} total products:</p>`;
+                    data.data.forEach(p => {
+                        const isOwner = currentUser && p.user_id === currentUser.id;
+                        const ownerBadge = isOwner ? 
+                            '<span class="owner-badge">YOUR PRODUCT</span>' : 
+                            `<span class="not-owner-badge">Owner ID: ${p.user_id}</span>`;
+                        
+                        container.innerHTML += `
+                            <div class="product-card">
+                                <div class="product-info">
+                                    <strong>${p.name}</strong> (ID: ${p.id})<br>
+                                    Price: £${p.price} ${ownerBadge}
+                                </div>
+                                <div class="product-actions">
+                                    ${isOwner ? `
+                                        <button class="btn-warning" onclick="document.getElementById('update-id').value=${p.id}">Edit</button>
+                                        <button class="btn-danger" onclick="document.getElementById('delete-id').value=${p.id}">Delete</button>
+                                    ` : `
+                                        <button class="btn-primary" onclick="alert('Would add to cart - ID: ${p.id}')">Add to Cart</button>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = '<p class="status info">No products available.</p>';
+                }
+            } catch (e) {
+                log('ALL PRODUCTS ERROR', e.message);
+                document.getElementById('all-products').innerHTML = `<p class="status error">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        // Delete product
+        async function deleteProduct() {
+            const id = document.getElementById('delete-id').value;
+            if (!id) {
+                showStatus('delete-result', '❌ Enter a product ID', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete product ID ${id}?`)) return;
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('DELETE PRODUCT', data);
+                
+                if (resp.ok) {
+                    showStatus('delete-result', `✅ Product ${id} deleted successfully!`, 'success');
+                } else if (resp.status === 401) {
+                    showStatus('delete-result', '❌ Not authenticated. Please login first.', 'error');
+                } else if (resp.status === 403) {
+                    showStatus('delete-result', `❌ FORBIDDEN: ${data.error || 'You can only delete your own products!'}`, 'error');
+                } else {
+                    showStatus('delete-result', `❌ Failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log('DELETE ERROR', e.message);
+                showStatus('delete-result', `❌ Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Update product
+        async function updateProduct() {
+            const id = document.getElementById('update-id').value;
+            const name = document.getElementById('update-name').value;
+            if (!id) {
+                showStatus('update-result', '❌ Enter a product ID', 'error');
+                return;
+            }
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name || 'Updated Product Name' }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                log('UPDATE PRODUCT', data);
+                
+                if (resp.ok) {
+                    showStatus('update-result', `✅ Product ${id} updated successfully!`, 'success');
+                } else if (resp.status === 401) {
+                    showStatus('update-result', '❌ Not authenticated. Please login first.', 'error');
+                } else if (resp.status === 403) {
+                    showStatus('update-result', `❌ FORBIDDEN: ${data.error || 'You can only update your own products!'}`, 'error');
+                } else {
+                    showStatus('update-result', `❌ Failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (e) {
+                log('UPDATE ERROR', e.message);
+                showStatus('update-result', `❌ Network error: ${e.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        updateServerDisplay();
+        checkAuth();
+        log('PAGE LOADED', { api_base: API_BASE, note: 'Use the server toggle above to switch between local and deployed servers' });
+    </script>
+</body>
+</html>

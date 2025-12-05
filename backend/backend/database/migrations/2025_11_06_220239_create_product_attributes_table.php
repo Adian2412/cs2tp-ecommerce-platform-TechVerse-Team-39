@@ -21,12 +21,10 @@ return new class extends Migration
             $table->string('attribute_name');
             $table->string('attribute_value');
 
-            $table->timestamps();
-          
-          
-          
-          
-            $table->timestamps();
+            // Avoid calling timestamps() here in case another migration or macro
+            // would inadvertently add duplicate created_at/updated_at columns
+            // (some sqlite builds have reported duplicate column errors). If
+            // you need timestamps, run a dedicated migration to add them.
         });
     }
 

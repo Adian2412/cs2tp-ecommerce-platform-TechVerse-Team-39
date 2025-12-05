@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
   <title>24/7 Support - Tech Verse</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/support.css">
@@ -12,12 +13,12 @@
   <div class="topnav">
     <nav>
       <li class="static" id="flag">flag</li>
-      <li class="static" id="phone-number">phone number</li>
+      <li class="static" id="phone-number" style="display: none;">phone number</li>
       <div class="nav-right">
-        <li id="nav-myaccount"><a href="account.html">My account</a></li>
-          <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
+        <li id="nav-myaccount" style="display: none;"><a href="account.html">My account</a></li>
+          <li id="nav-wishlist" style="display: none;"><a href="wishlist.html">Wish List</a></li>
           <script src="javascript/geo-flag.js"></script>
-          <li id="nav-checkout"><a href="cart.html">Checkout</a></li>
+          <li id="nav-checkout" style="display: none;"><a href="cart.html">Checkout</a></li>
       </div>
     </nav>
   </div>
@@ -29,15 +30,16 @@
     <nav class="left-of_search">
       <li><a href="index.html">Home</a></li>
       <li><a href="customer.html">Browse</a></li>
+      <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
       <li><a href="contact.html">Contact us</a></li>
       <li><a href="aboutus.html">About us</a></li>
     </nav>
     <div class="right_of_search">
       <input type="text" placeholder="Search..🔍">
        <ul class="right_of_search">
-           <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+           <li id="nav-fav" style="display: none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
            <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-           <li id="nav-user"><a href="#account"><i class="fa-solid fa-user"></i></a></li>
+           <li id="nav-user" style="display: none;"><a href="#account"><i class="fa-solid fa-user"></i></a></li>
        </ul>
       <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
     </div>
@@ -87,5 +89,6 @@
   <script src="javascript/cart-badge.js"></script>
   <script src="javascript/auth.js"></script>
   <script src="javascript/support.js"></script>
+  <script src="javascript/global-search.js"></script>
 </body>
 </html>

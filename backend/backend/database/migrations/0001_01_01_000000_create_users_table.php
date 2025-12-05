@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             #$table->timestamp('email_verified_at')->nullable(); //verification method not implemented yet
             $table->string('password');
+            $table->enum('role', ['admin', 'seller', 'customer'])->default('customer');
             $table->rememberToken();
             $table->timestamps();
         });
