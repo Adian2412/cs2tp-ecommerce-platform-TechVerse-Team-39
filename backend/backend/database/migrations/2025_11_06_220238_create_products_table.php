@@ -13,18 +13,18 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-             // $table->string('uid')->primary(); // Uncomment if using uid instead
             $table->string('name');
-            $table->string('sku')->unique();
+            $table->string('slug')->unique();
              
              //if category is deleted all products are deleted
               $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
-             //if a brand is deleted all its products are delete
-              $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
-
-            $table->decimal('price',10,2);
-            $table->integer('stock');
+             //if a variant is deleted all its products are delete
+          
+            $table->string('brand')->unique();
+           // $table->decimal('price',10,2);   -this may be helpful later
+           // $table->integer('stock');
             $table->text('description')->nullable();
+            $table->string('image_url')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
