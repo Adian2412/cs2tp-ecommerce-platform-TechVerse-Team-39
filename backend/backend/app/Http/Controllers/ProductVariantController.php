@@ -48,4 +48,3 @@ class ProductVariantController extends Controller
         return response()->json(['message' => 'Product variant deleted']); 
     }
 }
-//checking because of git
