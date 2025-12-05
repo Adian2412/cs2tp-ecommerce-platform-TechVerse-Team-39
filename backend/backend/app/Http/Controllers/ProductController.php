@@ -31,7 +31,8 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $product = Product::with(['variants.stock','attributes','reviews','images'])->findOrFail($id);
+        return response()->json($product);
     }
 
     /**
@@ -39,7 +40,8 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        //for the admin -> validate and update product + optionally variants/attributes
+        return response()->json(['message' => 'Product updated']);
     }
 
     /**
@@ -47,6 +49,7 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        //for the admin -> delete product + optionally variants/attributes
+        return response()->json(['message' => 'Product deleted']);
     }
 }
