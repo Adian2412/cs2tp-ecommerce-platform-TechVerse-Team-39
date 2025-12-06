@@ -17,6 +17,10 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ContactMessageController;
 
+
+
+
+
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -34,7 +38,14 @@ Route::apiResource('product-attributes', ProductAttributeController::class);
 Route::apiResource('product-images', ProductImageController::class);
 
 
-
+//login/register routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+//protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+});
 
 
 // Basket
