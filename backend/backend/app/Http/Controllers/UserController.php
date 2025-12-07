@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Validation\Rules;
 
 class UserController extends Controller
 {
@@ -12,7 +15,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $users = User::paginate(20);
+        return response()->json($users);
     }
 
     /**
@@ -20,7 +24,21 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'username' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', Rule::in(['admin', 'customer', 'seller'])],
+        ]);
+
+        $user = User::create([
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+        ]);
+
+        return response()->json(['message' => 'User created', 'user' => $user], 201);
     }
 
     /**
@@ -28,22 +46,41 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+        return response()->json($user);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'username' => 'sometimes|string|max:255',
+            'email' => ['sometimes','email', Rule::unique('users')->ignore($user->id)],
+            'password' => 'sometimes|string|min:6',
+            'role' => ['sometimes', Rule::in(['customer','admin','seller'])]
+        ]);
+    if (isset($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+         $user->update($validated);
+         return response()->json(['message' => 'User updated', 'user' => $user
+        ]);
     }
+
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+        $user->delete();
+        return response()->json(['message' => 'User deleted']);
     }
 }
