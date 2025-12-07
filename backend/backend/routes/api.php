@@ -67,3 +67,27 @@ Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout'
 
 // Note: CORS preflight (OPTIONS) requests are handled by CorsMiddleware
 // Do NOT add explicit OPTIONS routes here as they will override the middleware
+
+
+
+//CRUD
+Route::apiResources([
+    'users' => UserController::class,
+    'addresses' => AddressController::class,
+    'baskets' => BasketController::class,
+    'basket-items' => BasketItemController::class,
+    'brands' => BrandController::class,
+    'categories' => CategoryController::class,
+    'contact-messages' => ContactMessageController::class,
+    'orders' => OrderController::class,
+    'order-items' => OrderItemController::class,
+    'products' => ProductController::class,
+    'product-attributes' => ProductAttributeController::class,
+    'product-images' => ProductImageController::class,
+    'product-variants' => ProductVariantController::class,
+    'returns' => ReturnsController::class,
+    'reviews' => ReviewController::class,
+    'staff-profiles' => StaffProfileController::class,
+    'stocks' => StockController::class,
+    'stock-movements' => StockMovementController::class,
+]);
