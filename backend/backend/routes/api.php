@@ -2,6 +2,31 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+//use App\Http\Controllers\Api\ProductApiController;
+//use App\Http\Controllers\Api\ProductImageApiController;
+
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\ProductAttributeController;
+use App\Http\Controllers\API\ProductImageController;
+use App\Http\Controllers\API\ProductVariantController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\BrandController;
+use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\OrderItemController;
+use App\Http\Controllers\API\BasketController;
+use App\Http\Controllers\API\BasketItemController;
+use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\API\ContactMessageController;
+use App\Http\Controllers\API\ReturnsController;
+use App\Http\Controllers\API\StaffProfileController;
+use App\Http\Controllers\API\StockController;
+use App\Http\Controllers\API\StockMovementController;
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
