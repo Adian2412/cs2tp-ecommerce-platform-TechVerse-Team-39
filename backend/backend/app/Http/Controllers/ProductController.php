@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\ProductAttribute;
+use App\Models\Review;
+use App\Models\ProductImage;
 
 class ProductController extends Controller
 {
@@ -15,6 +20,8 @@ class ProductController extends Controller
         //add pagination, filters, eager loading
         $products = Product::with('variants')->paginate(20);
         return response()->json($products);
+        
+
     }
 
     /**
