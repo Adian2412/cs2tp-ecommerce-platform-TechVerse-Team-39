@@ -96,7 +96,7 @@
       saveCart(cart);
       renderCart();
       if(window.refreshCartBadge) window.refreshCartBadge();
-    }catch(e){ console.error('removeFromCart error', e); }
+    }catch(e){ /* Silent error */ }
   };
 
   // increase item quantity by 1
@@ -108,7 +108,7 @@
       saveCart(cart);
       renderCart();
       if(window.refreshCartBadge) window.refreshCartBadge();
-    }catch(e){ console.error('increaseQty error', e); }
+    }catch(e){ /* Silent error */ }
   };
 
   // decrease item quantity by 1 (min 1). If quantity goes to 0, remove item.
@@ -126,7 +126,7 @@
       saveCart(cart);
       renderCart();
       if(window.refreshCartBadge) window.refreshCartBadge();
-    }catch(e){ console.error('decreaseQty error', e); }
+    }catch(e){ /* Silent error */ }
   };
 
   document.addEventListener('DOMContentLoaded', function(){ renderCart(); });

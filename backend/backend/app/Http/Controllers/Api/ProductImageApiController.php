@@ -10,13 +10,14 @@ use App\Models\ProductImage;
 
 class ProductImageApiController extends Controller
 {
+    /**
+     * Helper to return JSON responses.
+     * CORS headers are handled by CorsMiddleware, so we don't override them here.
+     * This prevents conflicts with credentials: 'include' requests.
+     */
     protected function sendJson($data, $status = 200)
     {
-        return response()->json($data, $status)->withHeaders([
-            'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type, X-Requested-With, Authorization'
-        ]);
+        return response()->json($data, $status);
     }
     /**
      * Store images for an existing product
@@ -51,7 +52,7 @@ if ($user->role !== 'admin' && $product->user_id !== $user->id) {
             foreach ($request->file('images') as $file) {
                 if (!$file->isValid()) continue;
                 $path = $file->storePubliclyAs('products/' . $product->id, $file->getClientOriginalName(), 'public');
-                $url = Storage::disk('public')->url($path);
+                $url = url('/storage/' . $path);
                 $pi = ProductImage::create(['product_id' => $product->id, 'image_path' => $url]);
                 $stored[] = $pi;
             }
@@ -69,7 +70,7 @@ if ($user->role !== 'admin' && $product->user_id !== $user->id) {
                     $bin = base64_decode($b64);
                     $path = 'products/' . $product->id . '/' . $fname;
                     Storage::disk('public')->put($path, $bin);
-                    $url = Storage::disk('public')->url($path);
+                    $url = url('/storage/' . $path);
                     $pi = ProductImage::create(['product_id' => $product->id, 'image_path' => $url]);
                     $stored[] = $pi;
                 } elseif (is_string($item) && filter_var($item, FILTER_VALIDATE_URL)) {

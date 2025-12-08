@@ -40,6 +40,7 @@ return [
 'success' => true,
 'message' => 'all items are in stock.'
 ];
+}
 
 
  

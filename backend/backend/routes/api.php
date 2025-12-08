@@ -2,27 +2,23 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-//use App\Http\Controllers\Api\ProductApiController;
-//use App\Http\Controllers\Api\ProductImageApiController;
 
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\ProductAttributeController;
-use App\Http\Controllers\API\ProductImageController;
-use App\Http\Controllers\API\ProductVariantController;
-use App\Http\Controllers\API\CategoryController;
-use App\Http\Controllers\API\BrandController;
-use App\Http\Controllers\API\OrderController;
-use App\Http\Controllers\API\OrderItemController;
-use App\Http\Controllers\API\BasketController;
-use App\Http\Controllers\API\BasketItemController;
-use App\Http\Controllers\API\ReviewController;
-use App\Http\Controllers\API\ContactMessageController;
-use App\Http\Controllers\API\ReturnsController;
-use App\Http\Controllers\API\StaffProfileController;
-use App\Http\Controllers\API\StockController;
-use App\Http\Controllers\API\StockMovementController;
+use App\Http\Controllers\Api\AuthController as ApiAuthController;
+use App\Http\Controllers\Api\ProductApiController;
+use App\Http\Controllers\Api\ProductImageApiController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductAttributeController;
+use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BasketController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\API\AddressController;
 
 
 
@@ -41,29 +37,65 @@ use App\Http\Controllers\API\StockMovementController;
 */
 
 // Product routes - public browsing
-Route::get('/products', [App\Http\Controllers\Api\ProductApiController::class, 'index']);
-Route::get('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'show']);
+Route::get('/products', [ProductApiController::class, 'index']);
+Route::get('/products/{id}', [ProductApiController::class, 'show']);
 
 // Product routes - authenticated user actions
-Route::post('/products', [App\Http\Controllers\Api\ProductApiController::class, 'store']);
-Route::put('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'update']);
-Route::delete('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'destroy']);
+Route::post('/products', [ProductApiController::class, 'store']);
+Route::put('/products/{id}', [ProductApiController::class, 'update']);
+Route::delete('/products/{id}', [ProductApiController::class, 'destroy']);
 
 // Get only the current user's products (for seller dashboard)
-Route::get('/my-products', [App\Http\Controllers\Api\ProductApiController::class, 'myProducts']);
+Route::get('/my-products', [ProductApiController::class, 'myProducts']);
 
 // upload image(s) for an existing product
-Route::post('/products/{id}/images', [App\Http\Controllers\Api\ProductImageApiController::class, 'store']);
+Route::post('/products/{id}/images', [ProductImageApiController::class, 'store']);
+
+// Product-specific reviews route (get reviews for a product)
+Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
 
 // Test route
 Route::get('/test', function () {
     return response()->json(['message' => 'API routes from api.php working']);
 });
 
+// Debug session route
+Route::get('/debug-session', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+        'authenticated' => \Illuminate\Support\Facades\Auth::check(),
+        'user' => \Illuminate\Support\Facades\Auth::user(),
+        'session_driver' => config('session.driver'),
+        'session_same_site' => config('session.same_site'),
+        'session_secure' => config('session.secure'),
+    ]);
+});
+
 // Auth routes
-Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login']);
-Route::post('/register', [App\Http\Controllers\Api\AuthController::class, 'register']);
-Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
+Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/register', [ApiAuthController::class, 'register']);
+Route::post('/logout', [ApiAuthController::class, 'logout']);
+Route::get('/user', [ApiAuthController::class, 'user']); // Get current authenticated user
+
+// Helpful GET routes for API endpoints (for debugging - these return info instead of errors)
+Route::get('/register', function () {
+    return response()->json([
+        'error' => 'Method Not Allowed',
+        'message' => 'The /api/register endpoint only accepts POST requests.',
+        'usage' => 'Use POST with JSON body: { "username": "...", "email": "...", "password": "...", "role": "customer" }',
+        'example' => 'fetch("http://localhost:8000/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({...}) })'
+    ], 405);
+});
+
+Route::get('/login', function () {
+    return response()->json([
+        'error' => 'Method Not Allowed',
+        'message' => 'The /api/login endpoint only accepts POST requests.',
+        'usage' => 'Use POST with JSON body: { "email": "...", "password": "..." }',
+        'example' => 'fetch("http://localhost:8000/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({...}) })'
+    ], 405);
+});
 
 // Note: CORS preflight (OPTIONS) requests are handled by CorsMiddleware
 // Do NOT add explicit OPTIONS routes here as they will override the middleware
@@ -75,19 +107,14 @@ Route::apiResources([
     'users' => UserController::class,
     'addresses' => AddressController::class,
     'baskets' => BasketController::class,
-    'basket-items' => BasketItemController::class,
-    'brands' => BrandController::class,
     'categories' => CategoryController::class,
     'contact-messages' => ContactMessageController::class,
     'orders' => OrderController::class,
-    'order-items' => OrderItemController::class,
     'products' => ProductController::class,
     'product-attributes' => ProductAttributeController::class,
     'product-images' => ProductImageController::class,
     'product-variants' => ProductVariantController::class,
-    'returns' => ReturnsController::class,
     'reviews' => ReviewController::class,
-    'staff-profiles' => StaffProfileController::class,
     'stocks' => StockController::class,
     'stock-movements' => StockMovementController::class,
 ]);

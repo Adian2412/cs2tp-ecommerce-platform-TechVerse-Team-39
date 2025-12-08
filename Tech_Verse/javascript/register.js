@@ -15,7 +15,6 @@ function initRegisterForm() {
   const form = document.getElementById('register-form');
 
   if (!form) {
-    console.error('Register form not found!');
     return;
   }
 
@@ -39,15 +38,6 @@ function initRegisterForm() {
     return '';
   }
   const API_BASE = tvApiBase();
-
-  console.log('Form elements found:', {
-    first: !!first,
-    last: !!last,
-    email: !!email,
-    password: !!password,
-    role: !!role,
-    msg: !!msg
-  });
 
 
   // PASSWORD STRENGTH METER
@@ -195,33 +185,27 @@ function initRegisterForm() {
   updateButtonState();
 
  
-  console.log('Adding submit event listener to form');
   form.addEventListener('submit', handleFormSubmit);
 
   // Also add direct button click handler as fallback
   // submitBtn is already declared above
   if (submitBtn) {
     submitBtn.addEventListener('click', (e) => {
-      console.log('Button clicked directly');
       // Let the form submit event handle it
     });
   }
 
   async function handleFormSubmit(e) {
-    console.log('Form submit event triggered');
     e.preventDefault();
     e.stopPropagation();
-    console.log('Prevented default form submission');
 
     // Validate all fields before submission
     const validation = validateAllFields();
     if (!validation.allValid) {
-      console.log('Form validation failed:', validation.errorMsg);
       msg.textContent = validation.errorMsg;
       msg.style.color = '#d00';
       return;
     }
-    console.log('Form validation passed');
 
     msg.textContent = '';
     msg.style.color = '#000';
@@ -237,7 +221,9 @@ function initRegisterForm() {
       };
       if(adminCode && adminCode.value.trim()) payload.admin_code = adminCode.value.trim();
 
-      const resp = await fetch(`${API_BASE}/api/register`, {
+      // Ensure API_BASE doesn't already end with /api to prevent double /api/api paths
+      const apiUrl = API_BASE.endsWith('/api') ? `${API_BASE}/register` : `${API_BASE}/api/register`;
+      const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: API_BASE ? 'include' : 'same-origin',
@@ -252,6 +238,11 @@ function initRegisterForm() {
 
       if(data && data.user){
         localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
+      }
+      // Store session token for cross-origin requests (development)
+      const sessionToken = data.session_token || resp.headers.get('X-Session-Token');
+      if(sessionToken){
+        localStorage.setItem('techverse_session_token', sessionToken);
       }
 
       msg.style.color = '#0a0';

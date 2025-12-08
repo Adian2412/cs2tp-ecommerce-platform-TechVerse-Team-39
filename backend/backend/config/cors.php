@@ -35,9 +35,16 @@ return [
         'Accept',
         'Origin',
         'X-XSRF-TOKEN',
+        'X-Session-Token',
     ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'X-Session-Token',
+        'X-Session-Active',
+        'X-Session-ID',
+        'X-User-Authenticated',
+        'X-User-ID',
+    ],
 
     'max_age' => 86400,
 

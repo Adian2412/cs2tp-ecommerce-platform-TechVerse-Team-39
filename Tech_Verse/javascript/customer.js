@@ -15,10 +15,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
   const API_BASE = tvApiBase();
 
-  console.log('Customer.js: Initializing...');
   const wrap = document.getElementById('listings');
   if(!wrap) {
-    console.warn('customer.js: listings element not found');
     return;
   }
 
@@ -63,9 +61,31 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   const LISTINGS_KEY = 'techverse_listings_v1';
+  const CACHE_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes - products should be fresh for e-commerce
+  const STALE_THRESHOLD_MS = 30 * 1000; // 30 seconds - refresh in background if older than this
+  
+  // Check if we should force refresh (e.g., coming from seller page after creating product)
+  function shouldForceRefresh() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('refresh') === '1';
+  }
+
+  // Check if cached data is stale (needs refresh)
+  function isCacheStale(cacheData) {
+    if (!cacheData || !cacheData.timestamp) return true;
+    const age = Date.now() - cacheData.timestamp;
+    return age > CACHE_EXPIRY_MS;
+  }
+
+  // Check if cache should trigger background refresh (still valid but getting old)
+  function shouldRefreshInBackground(cacheData) {
+    if (!cacheData || !cacheData.timestamp) return true;
+    const age = Date.now() - cacheData.timestamp;
+    return age > STALE_THRESHOLD_MS;
+  }
 
   // Try to fetch listings from a backend API. We don't modify backend; try a few common endpoints.
-  async function tryFetchListingsFromServer(){
+  async function tryFetchListingsFromServer(forceRefresh = false){
     // prevent concurrent or repeated fetches
     if(window.__tv_fetch_listings_in_progress) return false;
     window.__tv_fetch_listings_in_progress = true;
@@ -76,7 +96,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     for(const ep of endpoints){
       try{
-        console.log('Customer.js: Trying to fetch from', ep);
 
         const isCrossOrigin = /^https?:\/\//i.test(ep);
         const controller = new AbortController();
@@ -91,7 +110,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
         clearTimeout(timeoutId);
 
         if(!resp.ok) {
-          console.log('Customer.js: Endpoint', ep, 'returned status', resp.status);
           continue;
         }
 
@@ -104,11 +122,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
         else if(json && Array.isArray(json.items)) list = json.items;
 
         if(!list || !list.length) {
-          console.log('Customer.js: No valid data from', ep);
           continue;
         }
-
-        console.log('Customer.js: Successfully fetched', list.length, 'products from', ep);
 
         // Normalize each item to our listing shape: { id, title, price, desc, images, category, user_id }
         const normalized = list.map(it => {
@@ -123,16 +138,26 @@ document.addEventListener('DOMContentLoaded', ()=>{
           const category = it.category || it.category_slug || it.cat || null;
           // Include user_id for ownership tracking (so users can only manage their own listings)
           const user_id = it.user_id || (it.user && it.user.id) || null;
-          return { id, title, price, desc, images, category, user_id };
+          // Include updated_at if available for better sync tracking
+          const updated_at = it.updated_at || it.updatedAt || null;
+          return { id, title, price, desc, images, category, user_id, updated_at };
         });
 
-        try{ localStorage.setItem(LISTINGS_KEY, JSON.stringify(normalized)); }catch(e){
-          console.warn('Customer.js: Failed to save to localStorage', e);
+        // Store with timestamp and metadata for freshness tracking
+        const cacheData = {
+          data: normalized,
+          timestamp: Date.now(),
+          version: '1.1' // version for future migrations
+        };
+
+        try{ 
+          localStorage.setItem(LISTINGS_KEY, JSON.stringify(cacheData));
+        }catch(e){
+          // Silent failure
         }
         window.__tv_fetch_listings_in_progress = false;
         return true;
       } catch(e){
-        console.log('Customer.js: Failed to fetch from', ep, e.message);
         window.__tv_fetch_listings_in_progress = false;
         continue;
       }
@@ -145,8 +170,32 @@ document.addEventListener('DOMContentLoaded', ()=>{
     try {
       const raw = localStorage.getItem(LISTINGS_KEY);
       if(!raw) return [];
+      
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      
+      // Handle legacy format (array directly) - migrate to new format
+      if(Array.isArray(parsed)) {
+        const cacheData = {
+          data: parsed,
+          timestamp: Date.now(),
+          version: '1.1'
+        };
+        try {
+          localStorage.setItem(LISTINGS_KEY, JSON.stringify(cacheData));
+        } catch(e) {
+          console.warn('Customer.js: Failed to migrate cache', e);
+        }
+        return parsed;
+      }
+      
+      // New format with timestamp
+      if(parsed && parsed.data && Array.isArray(parsed.data)) {
+        // Always return cached data - let caller decide if refresh is needed
+        // This prevents "No products" flash while fetching fresh data
+        return parsed.data;
+      }
+      
+      return [];
     } catch(e) {
       console.warn('Customer.js: Error loading listings from localStorage', e);
       return [];
@@ -156,7 +205,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   function saveListings(items){
     try {
       if(items && Array.isArray(items)) {
-        localStorage.setItem(LISTINGS_KEY, JSON.stringify(items));
+        const cacheData = {
+          data: items,
+          timestamp: Date.now(),
+          version: '1.1'
+        };
+        localStorage.setItem(LISTINGS_KEY, JSON.stringify(cacheData));
       }
     } catch(e) {
       console.warn('Customer.js: Error saving listings to localStorage', e);
@@ -175,9 +229,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     ];
     try {
       localStorage.setItem(LISTINGS_KEY, JSON.stringify(sample));
-      console.log('Customer.js: Seeded sample listings');
     } catch(e) {
-      console.warn('Customer.js: Failed to seed sample listings', e);
+      // Silent failure
     }
   }
 
@@ -422,18 +475,77 @@ document.addEventListener('DOMContentLoaded', ()=>{
     Array.from(container.children).forEach(ch=>{ const s = ch.dataset && ch.dataset.slug ? ch.dataset.slug : ch.textContent; ch.style.opacity = (s===slug) ? '1' : '0.65'; ch.style.transform = (s===slug)?'translateY(-1px)':''; });
   }
 
+  // Background refresh function - updates cache without blocking UI
+  async function backgroundRefresh() {
+    if(window.__tv_fetch_listings_in_progress) return;
+    
+    try {
+      const raw = localStorage.getItem(LISTINGS_KEY);
+      if(raw) {
+        const parsed = JSON.parse(raw);
+        if(parsed && parsed.data && shouldRefreshInBackground(parsed)) {
+          const refreshed = await tryFetchListingsFromServer();
+          if(refreshed) {
+            // Re-render with fresh data
+            render();
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('Customer.js: Background refresh error', e);
+    }
+  }
+
   // Try to sync listings from server on load (best-effort)
   (async function initCustomerSync(){
     try{
-      console.log('Customer.js: Starting initialization...');
-      const ok = await tryFetchListingsFromServer();
-      if(!ok) {
-        console.log('Customer.js: No server data, using sample listings');
-        seedSampleListings();
+      // Check if we should force refresh (e.g., new product created)
+      const forceRefresh = shouldForceRefresh();
+      if(forceRefresh) {
+        try {
+          localStorage.removeItem(LISTINGS_KEY);
+        } catch(e) {}
+        // Clean up the URL parameter
+        const cleanUrl = window.location.pathname + (urlSearchTerm ? `?search=${encodeURIComponent(urlSearchTerm)}` : '');
+        window.history.replaceState({}, '', cleanUrl);
       }
-      renderCategories();
-      render();
-      console.log('Customer.js: Initialization complete');
+      
+      // Check if we have cached data
+      const cached = loadListings();
+      const hasCachedData = cached && cached.length > 0;
+      
+      // Always try to fetch fresh data, but use cache immediately if available
+      if(hasCachedData && !forceRefresh) {
+        renderCategories();
+        render();
+        // Refresh in background without blocking
+        tryFetchListingsFromServer().then(refreshed => {
+          if(refreshed) {
+            render(); // Re-render with fresh data
+          }
+        });
+      } else {
+        // No cache, stale cache, or force refresh - fetch immediately
+        const ok = await tryFetchListingsFromServer();
+        if(!ok) {
+          seedSampleListings();
+        }
+        renderCategories();
+        render();
+      }
+      
+      // Set up periodic background refresh (every 2 minutes)
+      setInterval(() => {
+        backgroundRefresh();
+      }, 2 * 60 * 1000);
+      
+      // Also refresh when page becomes visible (user returns to tab)
+      document.addEventListener('visibilitychange', () => {
+        if(!document.hidden) {
+          backgroundRefresh();
+        }
+      });
+      
     }catch(e){
       console.warn('Customer.js: Error during initialization, using sample data', e);
       seedSampleListings();

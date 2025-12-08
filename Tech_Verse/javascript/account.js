@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
           credentials: apiBase ? 'include' : 'same-origin'
         });
       }catch(e){
-        console.warn('Server logout failed:', e);
+        // Silent failure
       }
 
       // Clear client-side auth
@@ -66,139 +66,219 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   // SELLER LISTINGS INTERFACE
-  const SELLINGS_KEY = 'techverse_listings_v1';
   const accountListWrap = document.getElementById('account-listings');
   const sellBtn = document.getElementById('sell-product');
 
   if(sellBtn) sellBtn.addEventListener('click', ()=>{ location.href = 'seller.html'; });
 
-  function loadListings(){
-    const raw = localStorage.getItem(SELLINGS_KEY);
-    if(!raw) return [];
-    try{return JSON.parse(raw);}catch(e){return []}
+  // Load user's products from API
+  async function loadUserProducts(){
+    try {
+      const resp = await fetch(`${API_BASE}/api/my-products`, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if(resp.ok){
+        const data = await resp.json();
+        // Handle paginated response or direct array
+        if(Array.isArray(data)) return data;
+        if(data.data && Array.isArray(data.data)) return data.data;
+        if(data.products && Array.isArray(data.products)) return data.products;
+        return [];
+      } else if(resp.status === 401){
+        return [];
+      } else {
+        return [];
+      }
+    } catch(e) {
+      return [];
+    }
   }
 
-  function saveListings(items){ localStorage.setItem(SELLINGS_KEY, JSON.stringify(items)); }
+  // Update product via API
+  async function updateProduct(productId, updates){
+    try {
+      const resp = await fetch(`${API_BASE}/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
+      return resp.ok;
+    } catch(e) {
+      return false;
+    }
+  }
 
-  function renderAccountListings(){
-    const items = loadListings();
+  // Delete product via API
+  async function deleteProduct(productId){
+    try {
+      const resp = await fetch(`${API_BASE}/api/products/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      return resp.ok;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // Helper to format price
+  function formatPrice(price){
+    if(typeof price === 'number') return '£' + price.toFixed(2);
+    return price || '£0.00';
+  }
+
+  // Helper to get image URL
+  function getProductImage(product){
+    if(product.images && Array.isArray(product.images) && product.images.length > 0){
+      const primaryImg = product.images.find(img => img.is_primary) || product.images[0];
+      if(primaryImg && primaryImg.image_path) return primaryImg.image_path;
+    }
+    if(product.image_url) return product.image_url;
+    return 'images/placeholder.png';
+  }
+
+  async function renderAccountListings(){
+    accountListWrap.innerHTML = '<p class="muted">Loading your listings...</p>';
+    
+    const items = await loadUserProducts();
     accountListWrap.innerHTML = '';
-    if(!items.length){ accountListWrap.innerHTML = '<p class="muted">You have no listings yet.</p>'; return; }
-    items.slice().reverse().forEach(it => {
+    
+    if(!items.length){ 
+      accountListWrap.innerHTML = '<p class="muted">You have no listings yet. <a href="seller.html">Sell a product</a></p>'; 
+      return; 
+    }
+
+    // Sort by created_at descending (newest first)
+    const sortedItems = items.slice().sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+      const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+      return dateB - dateA;
+    });
+
+    sortedItems.forEach(it => {
       const card = document.createElement('div'); card.className = 'listing-card';
-      const img = document.createElement('img'); img.className = 'listing-thumb'; img.src = (it.images && it.images[0]) || '';
+      const img = document.createElement('img'); img.className = 'listing-thumb'; 
+      img.src = getProductImage(it);
+      img.onerror = function(){ this.src = 'images/placeholder.png'; };
+      
       const info = document.createElement('div'); info.className = 'listing-info';
-      const title = document.createElement('div'); title.className = 'listing-title'; title.textContent = it.title;
-      const price = document.createElement('div'); price.className = 'listing-price'; price.textContent = it.price;
+      const titleEl = document.createElement('div'); titleEl.className = 'listing-title'; titleEl.textContent = it.name || 'Untitled Product';
+      const priceEl = document.createElement('div'); priceEl.className = 'listing-price'; priceEl.textContent = formatPrice(it.price);
       const meta = document.createElement('div'); meta.className = 'listing-meta';
-      meta.textContent = it.desc || '';
+      meta.textContent = it.description || '';
+
+      // Status badge
+      const statusBadge = document.createElement('span');
+      statusBadge.style.cssText = 'display:inline-block;padding:2px 6px;border-radius:4px;font-size:12px;margin-left:8px;';
+      if(it.is_sold){
+        statusBadge.textContent = 'SOLD';
+        statusBadge.style.background = '#d00';
+        statusBadge.style.color = '#fff';
+      } else if(it.is_active === false || it.is_active === 0){
+        statusBadge.textContent = 'INACTIVE';
+        statusBadge.style.background = '#999';
+        statusBadge.style.color = '#fff';
+      } else {
+        statusBadge.textContent = 'ACTIVE';
+        statusBadge.style.background = '#0a0';
+        statusBadge.style.color = '#fff';
+      }
+      titleEl.appendChild(statusBadge);
+
+      // Stock info
+      const stockInfo = document.createElement('div');
+      stockInfo.style.fontSize = '12px';
+      stockInfo.style.marginTop = '4px';
+      const stock = it.stock || 0;
+      stockInfo.innerHTML = stock > 0 ? 
+        `<span style="color:#0a0;">Stock: ${stock}</span>` : 
+        '<span style="color:#d00;">Out of stock</span>';
 
       const actions = document.createElement('div'); actions.className = 'listing-actions';
 
-      if(it.sold){
+      if(it.is_sold){
         const soldLabel = document.createElement('div'); soldLabel.textContent = 'Sold'; soldLabel.className = 'muted';
-        const trackingWrap = document.createElement('div'); trackingWrap.className = 'listing-meta';
-
-        function renderTrackingUI(listing){
-          trackingWrap.innerHTML = '';
-          const label = document.createElement('div'); label.style.marginBottom='6px';
-          if(!listing.tracking){
-            // show placeholder input to add tracking
-            const input = document.createElement('input'); input.className = 'tracking-input'; input.placeholder = 'Tracking link';
-            const saveBtn = document.createElement('button'); saveBtn.className='btn-small'; saveBtn.textContent='Save';
-            saveBtn.addEventListener('click', ()=>{
-              const val = input.value.trim(); if(!val) return alert('Enter a tracking link or cancel');
-              const all = loadListings(); const idx = all.findIndex(x=>x.id===listing.id); if(idx===-1) return alert('Listing not found');
-              all[idx].tracking = val;
-              // set edit allowance after first entry
-              all[idx].trackingEditsRemaining = 3;
-              saveListings(all); renderAccountListings();
-            });
-            const cancel = document.createElement('button'); cancel.className='btn-small'; cancel.textContent='Cancel';
-            cancel.addEventListener('click', ()=>{ renderAccountListings(); });
-            trackingWrap.appendChild(input); trackingWrap.appendChild(saveBtn); trackingWrap.appendChild(cancel);
+        
+        // Show tracking link if exists
+        if(it.tracking_link){
+          const trackingDiv = document.createElement('div');
+          trackingDiv.style.fontSize = '12px';
+          trackingDiv.style.marginTop = '4px';
+          const isUrl = /^https?:\/\//i.test(it.tracking_link);
+          if(isUrl){
+            trackingDiv.innerHTML = `<a href="${it.tracking_link}" target="_blank">📦 Tracking Link</a>`;
           } else {
-            // show tracking link (as anchor if looks like a URL)
-            const isUrl = /^(https?:)?\/\//i.test(listing.tracking) || /^https?:\/\//i.test(listing.tracking);
-            if(isUrl){
-              const a = document.createElement('a'); a.href = listing.tracking; a.target='_blank'; a.textContent = listing.tracking; a.style.display='block'; a.style.marginBottom='6px';
-              trackingWrap.appendChild(a);
-            } else {
-              const tdiv = document.createElement('div'); tdiv.textContent = listing.tracking; tdiv.style.marginBottom='6px'; trackingWrap.appendChild(tdiv);
-            }
-
-            const editsLeft = (typeof listing.trackingEditsRemaining === 'number') ? listing.trackingEditsRemaining : 0;
-            const info = document.createElement('div'); info.className='muted'; info.style.fontSize='12px'; info.textContent = 'Edits left: '+editsLeft; info.style.marginBottom='6px';
-            trackingWrap.appendChild(info);
-
-            const editBtn = document.createElement('button'); editBtn.className='btn-small'; editBtn.textContent='Edit';
-            if(editsLeft <= 0) { editBtn.disabled = true; editBtn.title = 'No edits remaining'; }
-            editBtn.addEventListener('click', ()=>{
-              // replace with input + save/cancel
-              trackingWrap.innerHTML = '';
-              const input = document.createElement('input'); input.className='tracking-input'; input.value = listing.tracking || ''; input.placeholder='Tracking link';
-              const saveBtn = document.createElement('button'); saveBtn.className='btn-small'; saveBtn.textContent='Save';
-              const cancel = document.createElement('button'); cancel.className='btn-small'; cancel.textContent='Cancel';
-              saveBtn.addEventListener('click', ()=>{
-                const val = input.value.trim(); if(!val) return alert('Enter a tracking link or cancel');
-                const all = loadListings(); const idx = all.findIndex(x=>x.id===listing.id); if(idx===-1) return alert('Listing not found');
-                // only decrement if value changed
-                if(all[idx].tracking !== val){
-                  if(typeof all[idx].trackingEditsRemaining !== 'number') all[idx].trackingEditsRemaining = 3;
-                  if(all[idx].trackingEditsRemaining > 0) all[idx].trackingEditsRemaining = all[idx].trackingEditsRemaining - 1;
-                  all[idx].tracking = val;
-                  saveListings(all);
-                }
-                renderAccountListings();
-              });
-              cancel.addEventListener('click', ()=>{ renderAccountListings(); });
-              trackingWrap.appendChild(input); trackingWrap.appendChild(saveBtn); trackingWrap.appendChild(cancel);
-            });
-            trackingWrap.appendChild(editBtn);
+            trackingDiv.textContent = '📦 ' + it.tracking_link;
           }
+          actions.appendChild(trackingDiv);
         }
-
-        renderTrackingUI(it);
-        actions.appendChild(soldLabel); actions.appendChild(trackingWrap);
-    } else {
-        const trackInput = document.createElement('input'); trackInput.className = 'tracking-input'; trackInput.placeholder = 'Tracking link';
-        const markBtn = document.createElement('button'); markBtn.className = 'btn-small'; markBtn.textContent = 'Mark as sold';
-        markBtn.addEventListener('click', ()=>{
-          // set sold and save tracking if provided
-          const all = loadListings();
-          const idx = all.findIndex(x=>x.id===it.id);
-          if(idx===-1) return alert('Listing not found');
-          all[idx].sold = true;
-          const t = trackInput.value.trim(); if(t){ all[idx].tracking = t; all[idx].trackingEditsRemaining = 3; }
-          all[idx].soldDate = Date.now();
-          saveListings(all);
-          renderAccountListings();
+        
+        // Add/Update tracking button
+        const trackBtn = document.createElement('button'); 
+        trackBtn.className = 'btn-small'; 
+        trackBtn.textContent = it.tracking_link ? 'Update Tracking' : 'Add Tracking';
+        trackBtn.addEventListener('click', async ()=>{
+          const link = prompt('Enter tracking link:', it.tracking_link || '');
+          if(link !== null){
+            const success = await updateProduct(it.id, { tracking_link: link });
+            if(success){
+              renderAccountListings();
+            } else {
+              alert('Failed to update tracking link');
+            }
+          }
         });
-        actions.appendChild(trackInput); actions.appendChild(markBtn);
-    }
+        
+        actions.appendChild(soldLabel);
+        actions.appendChild(trackBtn);
+      } else {
+        // Mark as sold button
+        const markBtn = document.createElement('button'); 
+        markBtn.className = 'btn-small'; 
+        markBtn.textContent = 'Mark as Sold';
+        markBtn.addEventListener('click', async ()=>{
+          if(confirm('Mark this product as sold?')){
+            const success = await updateProduct(it.id, { is_sold: true });
+            if(success){
+              renderAccountListings();
+            } else {
+              alert('Failed to mark product as sold');
+            }
+          }
+        });
+        actions.appendChild(markBtn);
+      }
 
-    // delete control for all listings (placed after branch)
-    const delBtn = document.createElement('button'); delBtn.className = 'btn-remove'; delBtn.textContent = 'Delete';
-    if(it.sold){ delBtn.disabled = true; delBtn.title = 'Cannot delete sold listing'; }
-    delBtn.addEventListener('click', ()=>{
-      if(it.sold) return;
-      if(!confirm('Delete this listing?')) return;
-      const all = loadListings();
-      const idx = all.findIndex(x=>x.id===it.id);
-      if(idx===-1) return;
-      const removed = all[idx];
-      const filtered = all.filter(x=>x.id !== it.id);
-      saveListings(filtered);
-      renderAccountListings();
-      __tv_lastRemoved = { item: removed, key: SELLINGS_KEY };
-      showUndoSnackbar('Listing deleted', ()=>{
-        const cur = loadListings(); cur.push(removed); saveListings(cur); renderAccountListings(); __tv_lastRemoved = null; clearUndoSnackbar();
+      // Delete button (disabled for sold items)
+      const delBtn = document.createElement('button'); 
+      delBtn.className = 'btn-remove'; 
+      delBtn.textContent = 'Delete';
+      if(it.is_sold){ 
+        delBtn.disabled = true; 
+        delBtn.title = 'Cannot delete sold listing'; 
+      }
+      delBtn.addEventListener('click', async ()=>{
+        if(it.is_sold) return;
+        if(!confirm('Delete this listing? This cannot be undone.')) return;
+        const success = await deleteProduct(it.id);
+        if(success){
+          renderAccountListings();
+        } else {
+          alert('Failed to delete product');
+        }
       });
-    });
-    actions.appendChild(delBtn);
+      actions.appendChild(delBtn);
 
-      info.appendChild(title); info.appendChild(price); info.appendChild(meta); info.appendChild(actions);
-      card.appendChild(img); card.appendChild(info);
+      info.appendChild(titleEl); 
+      info.appendChild(priceEl); 
+      info.appendChild(stockInfo);
+      info.appendChild(meta); 
+      info.appendChild(actions);
+      card.appendChild(img); 
+      card.appendChild(info);
       accountListWrap.appendChild(card);
     });
   }
@@ -206,28 +286,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // initial render
   renderAccountListings();
   renderPlacedOrders();
-
-  // undo snackbar helpers (single-slot)
-  let __tv_lastRemoved = null;
-  let __tv_undoTimer = null;
-  function showUndoSnackbar(message, onUndo){
-    let bar = document.getElementById('tv-undo-snackbar');
-    if(!bar){
-      bar = document.createElement('div'); bar.id = 'tv-undo-snackbar';
-      bar.style.position = 'fixed'; bar.style.right = '20px'; bar.style.bottom = '20px'; bar.style.background = '#111'; bar.style.color = '#fff'; bar.style.padding = '10px 12px'; bar.style.borderRadius = '8px'; bar.style.display='flex'; bar.style.alignItems='center'; bar.style.gap='8px'; bar.style.boxShadow='0 6px 18px rgba(0,0,0,0.2)';
-      document.body.appendChild(bar);
-    }
-    bar.innerHTML = '';
-    const msg = document.createElement('div'); msg.textContent = message; msg.style.fontSize='14px';
-    const undo = document.createElement('button'); undo.textContent = 'Undo'; undo.className='btn-ghost'; undo.style.padding='6px 10px';
-    undo.addEventListener('click', ()=>{ if(onUndo) onUndo(); clearUndoSnackbar(); });
-    const close = document.createElement('button'); close.textContent = '×'; close.className='btn-remove'; close.style.padding='6px 8px';
-    close.addEventListener('click', ()=>{ clearUndoSnackbar(); });
-    bar.appendChild(msg); bar.appendChild(undo); bar.appendChild(close);
-    if(__tv_undoTimer) clearTimeout(__tv_undoTimer);
-    __tv_undoTimer = setTimeout(()=>{ clearUndoSnackbar(); __tv_lastRemoved = null; }, 8000);
-  }
-  function clearUndoSnackbar(){ const b = document.getElementById('tv-undo-snackbar'); if(b) b.remove(); if(__tv_undoTimer) clearTimeout(__tv_undoTimer); __tv_undoTimer=null; }
 
   // ORDERS UI
   const ORDERS_KEY = 'techverse_orders_v1';
