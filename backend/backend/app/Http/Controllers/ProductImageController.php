@@ -4,21 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\ProductImage;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImageController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //this section is optional and not currently included in the database but i wrote some code for future implementation
-        // $productId = $request->query('product_id');
-        // $images = $productId 
-        //     ? ProductImage::where('product_id', $productId)->get() 
-        //     : ProductImage::all();
+        $query = ProductImage::query();
 
-        // return response()->json($images);
+        if ($request->has('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+
+        return response()->json(
+            $query->orderBy('created_at', 'desc')->paginate(50)
+        );
     }
 
     /**
@@ -26,7 +30,7 @@ class ProductImageController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //handled by ProductImageApiController
     }
 
     /**
@@ -34,7 +38,7 @@ class ProductImageController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return response()->json(ProductImage::findOrFail($id));
     }
 
     /**
@@ -42,7 +46,15 @@ class ProductImageController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+         $image = ProductImage::findOrFail($id);
+
+        $validated = $request->validate([
+            'image_path' => 'required|string'
+        ]);
+
+        $image->update($validated);
+
+        return response()->json(['message' => 'Product image updated', 'image' => $image]);
     }
 
     /**
@@ -50,6 +62,20 @@ class ProductImageController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+         $image = ProductImage::findOrFail($id);
+
+    
+if ($image->image_path && str_contains($image->image_path, '/storage/')) {
+  $path = str_replace(url('/storage/'), '', $image->image_path);
+  Storage::disk('public')->delete($path);
+        }
+
+        $image->delete();
+
+return response()->json([
+         'message' => 'Image deleted'
+        ]);
     }
-}
+
+    }
+
