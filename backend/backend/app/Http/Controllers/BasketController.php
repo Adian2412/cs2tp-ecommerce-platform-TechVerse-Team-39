@@ -11,9 +11,16 @@ use Illuminate\Http\Request;
 class BasketController extends Controller
 
 {
- public function index()
+ public function index(Request $request)
     {
-        return response()->json(Basket::paginate(20));
+   
+        $user = $request->user();
+
+        $basket = Basket::with('items.variant.product')
+            ->firstOrCreate(['user_id' => $user->id]);
+
+        return response()->json($basket);
+
     }
 
     /**
@@ -21,59 +28,95 @@ class BasketController extends Controller
      */
  public function store(Request $request)
     {
+           $user = $request->user();
+
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'product_variant_id' => 'required|exists:product_variants,id',
+            'quantity' => 'required|integer|min:1',
         ]);
 
-        $basket = Basket::create($validated);
-        return response()->json(['message' => 'Basket created', 'basket' => $basket], 201);
+        $basket = Basket::firstOrCreate(['user_id' => $user->id]);
+        $variant = ProductVariant::findOrFail($validated['product_variant_id']);
+        
+        //return response()->json(['message' => 'Basket created', 'basket' => $basket], 201);
+
+
+        //to check the stock
+        if($variant->stock_qty < $validated['quantity']) {
+            return response()->json(['message' => 'Insufficient stock'], 400);
+        }
+
+        // Add or update basket item
+         $item = BasketItem::firstOrNew([
+            'basket_id' => $basket->id,
+            'product_variant_id' => $variant->id
+        ]);
+
+
+    // update quantity
+    $item->quantity += $validated['quantity'];
+        $item->save();
+
+        return response()->json([
+            'message' => 'Item added to basket',
+            'basket' => $basket->load('items.variant.product')
+        ], 201);
+
     }
 
 
     // GET /basket 
-    public function show($id)
+    public function show(Request $request, $id=null)
     {
         $basket = $request->user()->basket()->with('items.variant.product')->first();
         return response()->json($basket);
     }
 
-    // POST /basket/add
-    public function add(Request $request)
-    {
-        // input validation for variant_id and quantity
-        return response()->json(['message' => 'item added to basket'], 201);
-    }
 
     // PATCH /basket/update
     public function update(Request $request, $id)
     {
-        $basket = Basket ::findOrFail($id);
         $validated = $request->validate([
-            'user_id' => 'sometimes|exists:users,id',
+            'quantity' => 'required|integer|min:1',
         ]);
-      
-        $basket->update($validated);
-        return response()->json(['message' => 'basket item updated']);
+
+        $item = BasketItem::findOrFail($id);
+
+    if($item->basket->user_id != $request->user()->id) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+    if($item->variant->stock_qty < $validated['quantity']) {
+        return response()->json(['message' => 'Insufficient stock'], 400);
+    }
+        $item->quantity = $validated['quantity'];
+        $item->save();
+        return response()->json(['message' => 'basket item updated', 'item' => $item]);
     }
 
-     public function destroy($id)
+
+
+    
+
+     public function destroy($id, Request $request)
     {
-        Basket ::findOrFail($id)->delete();
-        return response()->json(['message' => 'basket deleted']);
+    $item = BasketItem::findOrFail($id);
+    if($item->basket->user_id != $request->user()->id) {
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 
+    $item->delete();
+    return response()->json(['message' => 'basket item deleted']);
 
-  
-    public function remove(Request $request)
-    {
-        // remove item
-        return response()->json(null, 204);
+     
     }
 
    
     public function clear(Request $request)
     {
-        // clear all items
+       $basket = Basket::where('user_id', $request->user()->id)->first();
+       if ($basket) {
+           $basket->items()->delete();
+         }
         return response()->json(['message' => 'basket cleared']);
     }
 }
