@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const all = JSON.parse(raw);
       return all[productId] || [];
     } catch (e) {
-      console.error('Failed to parse reviews', e);
       return [];
     }
   }
@@ -56,24 +55,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // --- Server API helpers ---
   async function fetchProductFromServer() {
-    // Expected server shape:
-    // { id, name, price, description, reviews: [{rating, text, author, date}] }
+    // Database structure: { id, name, price, description, images: [{image_path}], reviews: [{rating, comment, user: {name}, created_at}] }
     const url = `${API_BASE}/api/products/${encodeURIComponent(productId)}`;
-    const resp = await fetch(url, { credentials: API_BASE ? 'include' : 'same-origin' });
-    if (!resp.ok) throw new Error('no-server');
+    const fetchOpts = {
+      credentials: API_BASE ? 'include' : 'same-origin'
+    };
+    const resp = await fetch(url, fetchOpts);
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        throw new Error('Product not found');
+      }
+      throw new Error('no-server');
+    }
     return resp.json();
   }
 
   async function postReviewToServer(review) {
-    // POST { rating, text } -> returns created review object
-    const url = `${API_BASE}/api/products/${encodeURIComponent(productId)}/reviews`;
+    // POST to /api/reviews with { product_id, rating, comment }
+    const url = `${API_BASE}/api/reviews`;
     const resp = await fetch(url, {
       method: 'POST',
       credentials: API_BASE ? 'include' : 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: review.rating, text: review.text })
+      body: JSON.stringify({ 
+        product_id: parseInt(productId),
+        rating: review.rating, 
+        comment: review.text 
+      })
     });
-    if (!resp.ok) throw new Error('post-failed:' + resp.status);
+    if (!resp.ok) {
+      const errorData = await resp.json().catch(() => ({}));
+      throw new Error('post-failed:' + resp.status + ' - ' + (errorData.error || errorData.message || 'Unknown error'));
+    }
     return resp.json();
   }
 
@@ -88,19 +101,86 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderProduct(data){
     if (!data) return;
     const fmt = (window.tvCurrency && typeof window.tvCurrency.formatCurrency === 'function') ? window.tvCurrency.formatCurrency : (v=> (Number.isFinite(Number(v)) ? '£'+Number(v).toFixed(2) : String(v)));
+    
+    // Map database fields: name, price, description, stock, is_sold, is_active
     if (prodNameEl && data.name) prodNameEl.textContent = data.name;
-    if (prodPriceEl && (typeof data.price !== 'undefined' && data.price !== null)) prodPriceEl.textContent = fmt(data.price);
-    if (prodDescEl && data.description) prodDescEl.innerHTML = `<p>${escapeHtml(data.description)}</p>`;
+    if (prodPriceEl && (typeof data.price !== 'undefined' && data.price !== null)) {
+      prodPriceEl.textContent = fmt(data.price);
+    } else if (prodPriceEl) {
+      prodPriceEl.textContent = 'Price not available';
+    }
+    
+    if (prodDescEl && data.description) {
+      let descHtml = `<p>${escapeHtml(data.description)}</p>`;
+      
+      // Add stock/availability info
+      if(typeof data.stock !== 'undefined') {
+        const stock = parseInt(data.stock) || 0;
+        const isSold = data.is_sold === true || data.is_sold === 1;
+        const isActive = data.is_active !== false && data.is_active !== 0;
+        
+        if(isSold) {
+          descHtml += '<p style="color:#d00;font-weight:bold;margin-top:8px;">⚠️ This item has been sold</p>';
+        } else if(!isActive) {
+          descHtml += '<p style="color:#d00;font-weight:bold;margin-top:8px;">⚠️ This item is currently unavailable</p>';
+        } else if(stock > 0) {
+          descHtml += `<p style="color:#0a0;margin-top:8px;">✓ In stock (${stock} available)</p>`;
+        } else {
+          descHtml += '<p style="color:#d00;margin-top:8px;">⚠️ Out of stock</p>';
+        }
+      }
+      
+      prodDescEl.innerHTML = descHtml;
+    } else if (prodDescEl) {
+      prodDescEl.innerHTML = '<p>No description available.</p>';
+    }
+    
+    // Disable add to cart if product is sold or out of stock
+    if(addToCartBtn) {
+      const stock = parseInt(data.stock) || 0;
+      const isSold = data.is_sold === true || data.is_sold === 1;
+      const isActive = data.is_active !== false && data.is_active !== 0;
+      
+      if(isSold || !isActive || stock <= 0) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Unavailable';
+        addToCartBtn.style.opacity = '0.6';
+        addToCartBtn.style.cursor = 'not-allowed';
+      } else {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        addToCartBtn.style.opacity = '1';
+        addToCartBtn.style.cursor = 'pointer';
+      }
+    }
+    
     // set document title
     try{ if(data.name) document.title = data.name + ' — Tech Verse'; }catch(e){}
-    // render image if available
+    
+    // render image if available - database has images array with image_path
     try{
       const imgWrap = document.querySelector('.product_image');
       if(imgWrap){
-        const src = (data.images && data.images[0] && data.images[0].image_path) ? data.images[0].image_path : 'images/placeholder.png';
-        imgWrap.innerHTML = `<img src="${src}" alt="${escapeHtml(data.name||'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
+        let src = 'images/placeholder.png';
+        
+        // Check images array first (from relationship)
+        if(data.images && Array.isArray(data.images) && data.images.length > 0) {
+          // Find primary image or use first one
+          const primaryImg = data.images.find(img => img.is_primary) || data.images[0];
+          if(primaryImg && primaryImg.image_path) {
+            src = primaryImg.image_path;
+          }
+        } 
+        // Fallback to image_url on product itself
+        else if(data.image_url) {
+          src = data.image_url;
+        }
+        
+        imgWrap.innerHTML = `<img src="${src}" alt="${escapeHtml(data.name||'Product')}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.src='images/placeholder.png'">`;
       }
-    }catch(e){}
+    }catch(e){
+      // Silent failure
+    }
   }
 
   function renderReviews(items){
@@ -110,12 +190,23 @@ document.addEventListener('DOMContentLoaded', function () {
       reviewsList.innerHTML = '<p style="color:#666;">No reviews yet — be the first to review.</p>';
       return;
     }
+    
+    // Handle both database format and legacy format
     items.slice().reverse().forEach(r => {
       const el = document.createElement('div');
       el.className = 'review-item';
-      const author = r.author || 'Anonymous';
-      const date = r.date ? new Date(r.date).toLocaleString() : '';
-      el.innerHTML = `\n        <div class="meta">${'★'.repeat(r.rating || 0)} ${r.rating || 0} · ${escapeHtml(author)} · ${escapeHtml(date)}</div>\n        <div class="text">${escapeHtml(r.text)}</div>\n      `;
+      
+      // Database format: { rating, comment, user: {name}, created_at }
+      // Legacy format: { rating, text, author, date }
+      const rating = r.rating || 0;
+      const text = r.comment || r.text || '';
+      const author = (r.user && r.user.name) || r.user?.username || r.author || 'Anonymous';
+      const date = r.created_at ? new Date(r.created_at).toLocaleString() : (r.date ? new Date(r.date).toLocaleString() : '');
+      
+      el.innerHTML = `
+        <div class="meta">${'★'.repeat(rating)} ${rating}/5 · ${escapeHtml(author)} · ${escapeHtml(date)}</div>
+        <div class="text">${escapeHtml(text)}</div>
+      `;
       reviewsList.appendChild(el);
     });
   }
@@ -125,16 +216,36 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const data = await fetchProductFromServer();
       serverAvailable = true;
-      // render product and server-provided reviews
+      
+      // Database structure: product has reviews relationship loaded
+      // Reviews are in data.reviews array with user relationship
       renderProduct(data);
-      renderReviews(data.reviews || []);
+      
+      // Handle reviews - could be array directly or in data property (pagination)
+      let reviews = [];
+      if(Array.isArray(data.reviews)) {
+        reviews = data.reviews;
+      } else if(data.reviews && Array.isArray(data.reviews.data)) {
+        reviews = data.reviews.data; // Paginated response
+      }
+      
+      renderReviews(reviews);
     } catch (e) {
       serverAvailable = false;
+      
       // fallback to local data: try to load product details from local listings
       try{
         const raw = localStorage.getItem('techverse_listings_v1');
         if(raw){
-          const list = JSON.parse(raw) || [];
+          const parsed = JSON.parse(raw);
+          // Handle both legacy format (array) and new format (object with data property)
+          let list = [];
+          if(Array.isArray(parsed)) {
+            list = parsed; // Legacy format
+          } else if(parsed && parsed.data && Array.isArray(parsed.data)) {
+            list = parsed.data; // New format with timestamp
+          }
+          
           const found = list.find(x => String(x.id) === String(productId));
           if(found){
             // render product details from listing
@@ -146,9 +257,16 @@ document.addEventListener('DOMContentLoaded', function () {
               images: found.images || []
             };
             renderProduct(p);
+          } else {
+            // Product not found in cache either
+            if(prodNameEl) prodNameEl.textContent = 'Product not found';
+            if(prodDescEl) prodDescEl.innerHTML = '<p>This product could not be loaded. Please check the product ID or try again later.</p>';
           }
         }
-      }catch(err){ /* ignore parse errors */ }
+      }catch(err){ 
+        if(prodNameEl) prodNameEl.textContent = 'Error loading product';
+        if(prodDescEl) prodDescEl.innerHTML = '<p>Unable to load product information.</p>';
+      }
       // reviews still come from local reviews fallback
       renderReviews(loadReviewsFallback());
     }
@@ -199,26 +317,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (serverAvailable) {
         try {
-          // send to server and re-fetch or append returned review
+          // send to server and re-fetch product to get updated reviews
           const created = await postReviewToServer(obj);
-          // if server returns full product or reviews, re-fetch; otherwise append
-          if (created && created.product) {
-            renderProduct(created.product);
-            renderReviews(created.product.reviews || []);
-          } else if (created && created.review) {
-            // append the created review to the list
-            const cur = loadReviewsFallback(); // still show fallback + server reviews if any
-            renderReviews([...(cur || []), created.review]);
-          } else {
-            // best-effort: re-fetch product
-            try {
-              const data = await fetchProductFromServer();
-              renderProduct(data);
-              renderReviews(data.reviews || []);
-            } catch (e) { /* ignore */ }
+          
+          // Re-fetch product to get updated reviews list with new review
+          try {
+            const data = await fetchProductFromServer();
+            renderProduct(data);
+            
+            // Handle reviews - could be array directly or in data property
+            let reviews = [];
+            if(Array.isArray(data.reviews)) {
+              reviews = data.reviews;
+            } else if(data.reviews && Array.isArray(data.reviews.data)) {
+              reviews = data.reviews.data;
+            }
+            
+            renderReviews(reviews);
+          } catch (e) {
+            // If refresh fails, try to append the created review if available
+            if (created && created.review) {
+              const cur = loadReviewsFallback();
+              renderReviews([...(cur || []), created.review]);
+            } else {
+              // Show success message but keep current reviews
+              alert('Review submitted successfully!');
+            }
           }
         } catch (err) {
-          console.warn('Server post failed, saving locally as fallback', err);
+          alert('Failed to submit review to server: ' + err.message + '. Saving locally.');
           saveReviewFallback(obj);
           renderReviews(loadReviewsFallback());
         }
@@ -344,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
           await postLikeToServer(toSet);
           updateLikeUI(toSet);
           return;
-        }catch(e){ console.warn('like post failed, falling back', e); }
+        }catch(e){ /* fallback */ }
       }
       // fallback
       saveLikeFallback(toSet);
@@ -362,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
           await postWishlistToServer(toSet);
           updateWishlistUI(toSet);
           return;
-        }catch(e){ console.warn('wishlist post failed, falling back', e); }
+        }catch(e){ /* fallback */ }
       }
       const list = loadWishlistFallback();
       if(toSet){
@@ -407,14 +534,21 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function serverAddToCart(productId, qty){
-    const url = `${API_BASE}/api/cart/add`;
+    // Try basket API endpoint (Laravel standard)
+    const url = `${API_BASE}/api/baskets`;
     const resp = await fetch(url, {
       method: 'POST',
       credentials: API_BASE ? 'include' : 'same-origin',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ productId: productId, qty: qty })
+      body: JSON.stringify({ 
+        product_id: parseInt(productId), 
+        quantity: qty 
+      })
     });
-    if(!resp.ok) throw new Error('cart-add-failed');
+    if(!resp.ok) {
+      const errorData = await resp.json().catch(() => ({}));
+      throw new Error('cart-add-failed: ' + (errorData.error || errorData.message || 'Unknown error'));
+    }
     return resp.json();
   }
 
@@ -433,14 +567,22 @@ document.addEventListener('DOMContentLoaded', function () {
           await serverAddToCart(productId, qty);
           // try to fetch updated cart count from server (optional)
           try{
-            const r = await fetch(`${API_BASE}/api/cart`, { credentials: API_BASE ? 'include' : 'same-origin' });
-            if(r.ok){ const js = await r.json(); if(typeof js.count !== 'undefined'){ if(cartCountEl) cartCountEl.textContent = String(js.count); } }
-          }catch(e){}
+            const r = await fetch(`${API_BASE}/api/baskets`, { credentials: API_BASE ? 'include' : 'same-origin' });
+            if(r.ok){ 
+              const js = await r.json();
+              // Handle paginated response or direct array
+              const items = Array.isArray(js) ? js : (js.data || []);
+              const count = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+              if(cartCountEl) cartCountEl.textContent = String(count);
+            }
+          }catch(e){
+            // Silent failure
+          }
           showCartToast();
           updateCartBadge();
           if(window.refreshCartBadge) window.refreshCartBadge();
           return;
-        }catch(e){ console.warn('server add to cart failed, falling back', e); }
+        }catch(e){ /* fallback */ }
       }
       // fallback: store in localStorage map { productId: {id, qty, name?, price?} }
       const cart = loadCart();
@@ -469,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // redirect to checkout after server add
           location.href = 'checkout.html';
           return;
-        }catch(e){ console.warn('server buy-now failed, falling back', e); }
+        }catch(e){ /* fallback */ }
       }
       // fallback: add to localStorage cart then redirect
       const cart = loadCart();

@@ -12,11 +12,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Ensure CORS middleware runs for all routes (including OPTIONS/preflight)
-        $middleware->append(\App\Http\Middleware\CorsMiddleware::class);
+        // CRITICAL: CORS middleware must run FIRST for all requests (especially OPTIONS preflight)
+        // Using prepend on global stack ensures it runs before any other middleware
+        $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
         
-        // Enable session for API routes (needed for authentication)
-        $middleware->statefulApi();
+        // Ensure sessions table exists before session middleware runs (for setup routes)
+        $middleware->web(prepend: [
+            \App\Http\Middleware\EnsureSessionsTableExists::class,
+            \App\Http\Middleware\ConfigureSessionCookie::class,
+        ]);
+        
+        // Enable session middleware for API routes (needed for session-based authentication)
+        // We're using session-based auth, not Sanctum tokens, so we configure sessions manually
+        $middleware->api(prepend: [
+            \App\Http\Middleware\EnsureSessionsTableExists::class,
+            \App\Http\Middleware\ConfigureSessionCookie::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\EnsureSessionCookie::class, // Run after StartSession to fix cookie attributes
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -6,23 +6,60 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
 use App\Models\Brand;
+use App\Models\User;
 
 class ProductApiController extends Controller
 {
     /**
-     * Helper to return JSON with permissive CORS headers for development.
+     * Helper to return JSON responses.
+     * CORS headers are handled by CorsMiddleware, so we don't override them here.
+     * This prevents conflicts with credentials: 'include' requests.
      */
     protected function sendJson($data, $status = 200)
     {
-        return response()->json($data, $status)->withHeaders([
-            'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type, X-Requested-With, Authorization'
-        ]);
+        return response()->json($data, $status);
+    }
+    
+    /**
+     * Try to authenticate from X-Session-Token header (for cross-origin development).
+     * This allows the frontend to store the session ID and send it as a header
+     * when cookies don't work (cross-origin HTTP requests).
+     */
+    protected function tryHeaderAuth(Request $request)
+    {
+        // Check if already authenticated via session cookie
+        if (Auth::check()) {
+            return true;
+        }
+        
+        // Try X-Session-Token header
+        $token = $request->header('X-Session-Token');
+        if (!$token) {
+            return false;
+        }
+        
+        // Try to load the session from database
+        try {
+            $sessionData = DB::table('sessions')->where('id', $token)->first();
+            if ($sessionData && $sessionData->user_id) {
+                // Log the user in
+                $user = User::find($sessionData->user_id);
+                if ($user) {
+                    Auth::login($user);
+                    return true;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Header auth failed: ' . $e->getMessage());
+        }
+        
+        return false;
     }
 
     /**
@@ -48,7 +85,10 @@ class ProductApiController extends Controller
      */
     public function myProducts(Request $request)
     {
-        $userId = auth()->id();
+        // Try header-based auth if cookie auth didn't work
+        $this->tryHeaderAuth($request);
+        
+        $userId = Auth::id();
         
         if (!$userId) {
             return $this->sendJson(['error' => 'Authentication required'], 401);
@@ -129,10 +169,14 @@ class ProductApiController extends Controller
         }
         $stock = $request->input('quantity') ?? $request->input('stock') ?? 0;
 
+        // Try header-based auth if cookie auth didn't work (for cross-origin development)
+        $this->tryHeaderAuth($request);
+        
         // Get authenticated user - all customers can sell
-        $userId = auth()->id();
+        $userId = Auth::id();
+        
         if (!$userId) {
-            return $this->sendJson(['error' => 'Authentication required'], 401);
+            return $this->sendJson(['error' => 'Authentication required. Please log in first.'], 401);
         }
 
         $product = Product::create([
@@ -150,6 +194,7 @@ class ProductApiController extends Controller
             'is_sold' => false,
             'is_active' => true,
         ]);
+        
 
         // handle image uploads: either real files (multipart) or base64 data URLs in JSON
         $storedFirstUrl = null;
@@ -194,6 +239,9 @@ class ProductApiController extends Controller
             $product->save();
         }
 
+        // Save session to ensure it persists
+        session()->save();
+
         return $this->sendJson(['product' => $product->load('images')], 201);
     }
 
@@ -211,16 +259,19 @@ class ProductApiController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Try header-based auth if cookie auth didn't work
+        $this->tryHeaderAuth($request);
+        
         $product = Product::findOrFail($id);
 
         // Check authentication
-        $userId = auth()->id();
+        $userId = Auth::id();
         if (!$userId) {
             return $this->sendJson(['error' => 'Authentication required'], 401);
         }
 
         // Check ownership - only the owner or admin can update
-        $user = auth()->user();
+        $user = Auth::user();
         $isOwner = $product->user_id === $userId;
         $isAdmin = $user && $user->role === 'admin';
 
@@ -245,18 +296,21 @@ class ProductApiController extends Controller
      * Delete product (only by owner or admin)
      * This permanently removes the product from the database
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        // Try header-based auth if cookie auth didn't work
+        $this->tryHeaderAuth($request);
+        
         $product = Product::findOrFail($id);
 
         // Check authentication
-        $userId = auth()->id();
+        $userId = Auth::id();
         if (!$userId) {
             return $this->sendJson(['error' => 'Authentication required'], 401);
         }
 
         // Check ownership - only the owner or admin can delete
-        $user = auth()->user();
+        $user = Auth::user();
         $isOwner = $product->user_id === $userId;
         $isAdmin = $user && $user->role === 'admin';
 

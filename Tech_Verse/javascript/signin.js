@@ -50,7 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attempt real server login
     try{
-      const resp = await fetch(`${API_BASE}/api/login`, {
+      // Ensure API_BASE doesn't already end with /api to prevent double /api/api paths
+      const apiUrl = API_BASE.endsWith('/api') ? `${API_BASE}/login` : `${API_BASE}/api/login`;
+      const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: API_BASE ? 'include' : 'same-origin',
@@ -65,9 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if(data && data.user){
         localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
       }
+      // Store session token for cross-origin requests (development)
+      // This allows authentication to persist even when cookies don't work
+      const sessionToken = data.session_token || resp.headers.get('X-Session-Token');
+      if(sessionToken){
+        localStorage.setItem('techverse_session_token', sessionToken);
+      }
       msg.style.color = '#0a0';
       msg.textContent = 'Login successful! Redirecting...';
-      setTimeout(() => location.href = 'index.html', 800);
+      // Redirect immediately after a brief delay to show success message
+      setTimeout(() => {
+        // Use window.location.replace to prevent back button issues
+        window.location.replace('index.html');
+      }, 500);
     }catch(err){
       msg.style.color = '#d00';
       msg.textContent = 'Network error. Please try again.';
