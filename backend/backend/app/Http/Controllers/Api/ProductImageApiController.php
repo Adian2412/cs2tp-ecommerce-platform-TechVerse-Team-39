@@ -23,8 +23,27 @@ class ProductImageApiController extends Controller
      */
     public function store(Request $request, $id)
     {
+
+$request->validate([
+    'images.*' => 'image|max:5120' // max 5MB per image
+]);
+
+
         $product = Product::find($id);
         if (!$product) return $this->sendJson(['error' => 'product not found'], 404);
+
+        // check authentication
+        if (!auth()->check()) {
+    return $this->sendJson(['error' => 'Authentication required'], 401);
+}
+
+$user = auth()->user();
+
+if ($user->role !== 'admin' && $product->user_id !== $user->id) {
+    return $this->sendJson(['error' => 'Unauthorized'], 403);
+}
+
+
 
         $stored = [];
 
@@ -37,6 +56,7 @@ class ProductImageApiController extends Controller
                 $stored[] = $pi;
             }
         }
+
 
         // also accept JSON array 'images' containing data URLs or remote URLs
         $images = $request->input('images');
@@ -67,4 +87,7 @@ class ProductImageApiController extends Controller
 
         return $this->sendJson(['images' => $stored]);
     }
+
 }
+
+
