@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class BasketItem extends Model
 {
-    protected $fillable = ['basket_id', 'variant_id', 'quantity'];
+    protected $fillable = ['basket_id', 'product_variant_id', 'quantity'];
 
     public function basket()
     {
         return $this->belongsTo(Basket::class);
     }
 
-    public function productVariant()
+    public function variant()
     {
-        return $this->belongsTo(ProductVariant::class, 'variant_id');
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }
