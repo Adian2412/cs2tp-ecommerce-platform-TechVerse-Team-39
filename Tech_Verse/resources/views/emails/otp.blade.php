@@ -30,7 +30,7 @@
 
         <div class="footer">
             &copy; {{ date('Y') }} Tech Verse Ltd &bull; Aston University, Birmingham, UK<br>
-            This is an automated message — please do not reply.
+            This is an automated message &mdash; please do not reply.
         </div>
     </div>
 </body>

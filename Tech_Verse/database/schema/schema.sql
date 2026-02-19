@@ -243,3 +243,15 @@ CREATE TABLE contact_messages (
   message TEXT NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+/*used to make table sessions*/
+CREATE TABLE sessions (
+  id VARCHAR(255) NOT NULL PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  ip_address VARCHAR(45) NULL,
+  user_agent TEXT NULL,
+  payload LONGTEXT NOT NULL,
+  last_activity INT NOT NULL,
+  INDEX sessions_user_id_index (user_id),
+  INDEX sessions_last_activity_index (last_activity)
+) ENGINE=InnoDB;

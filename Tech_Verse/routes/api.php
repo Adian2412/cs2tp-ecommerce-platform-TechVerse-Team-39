@@ -8,6 +8,8 @@ use App\Http\Controllers\GdprController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,12 +22,40 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('web')->group(function () {
 
-    // ── Auth ─────────────────────────────────────────────────────────────────
+    // ── Auth ──────────────────────────────────────────────────────────────────
     Route::post('/auth/register',   [AuthController::class, 'register']);
     Route::post('/auth/login',      [AuthController::class, 'login']);
     Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/auth/logout',     [AuthController::class, 'logout']);
     Route::post('/auth/me',         [AuthController::class, 'me']);
+
+    // ── Geo (server-side country detection — replaces client-side IP calls) ───
+    // Returns the visitor's country code based on the request IP, resolved
+    // server-side so no user IP is ever sent to a third-party from the browser.
+    Route::middleware('throttle:60,1')->get('/geo', function (Request $request) {
+        $ip = $request->ip();
+
+        // In local/dev environments (127.x, ::1) just return GB as default
+        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'])) {
+            return response()->json(['country' => 'GB']);
+        }
+
+        // Use ip-api.com server-to-server (free, no key needed, not exposed to client)
+        try {
+            $url  = 'http://ip-api.com/json/' . urlencode($ip) . '?fields=countryCode';
+            $json = @file_get_contents($url);
+            if ($json) {
+                $data = json_decode($json, true);
+                if (!empty($data['countryCode'])) {
+                    return response()->json(['country' => strtoupper($data['countryCode'])]);
+                }
+            }
+        } catch (\Exception $e) {
+            // fall through to default
+        }
+
+        return response()->json(['country' => null]);
+    });
 
     // ── Categories (public) ───────────────────────────────────────────────────
     Route::middleware('throttle:60,1')->group(function () {
@@ -36,9 +66,12 @@ Route::middleware('web')->group(function () {
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/products',      [ProductController::class, 'index']);
         Route::get('/products/{id}', [ProductController::class, 'show'])->where('id', '[0-9]+');
-
-        // Reviews (public read)
         Route::get('/products/{id}/reviews', [ReviewController::class, 'index'])->where('id', '[0-9]+');
+    });
+
+    // ── Cookie consent (rate limited to prevent spam) ─────────────────────────
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/consent', [ConsentController::class, 'store']);
     });
 
     // ── Authenticated routes ───────────────────────────────────────────────────
@@ -49,19 +82,20 @@ Route::middleware('web')->group(function () {
         Route::post('/cart', [CartController::class, 'update']);
 
         // Orders
-        Route::get('/orders',          [OrderController::class, 'index']);
-        Route::get('/orders/{id}',     [OrderController::class, 'show'])->where('id', '[0-9]+');
+        Route::get('/orders',      [OrderController::class, 'index']);
+        Route::get('/orders/{id}', [OrderController::class, 'show'])->where('id', '[0-9]+');
 
-        // Reviews (authenticated write)
+        // Reviews (write)
         Route::post('/products/{id}/reviews', [ReviewController::class, 'store'])->where('id', '[0-9]+');
+
+        // Profile
+        Route::put('/user',             [UserController::class, 'update']);
+        Route::put('/user/password',    [UserController::class, 'changePassword']);
 
         // GDPR
         Route::get('/gdpr/export',            [GdprController::class, 'export']);
         Route::post('/gdpr/request-deletion', [GdprController::class, 'requestDeletion']);
 
     });
-
-    // ── Cookie consent (public) ───────────────────────────────────────────────
-    Route::post('/consent', [ConsentController::class, 'store']);
 
 });

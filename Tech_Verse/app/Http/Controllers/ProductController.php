@@ -11,7 +11,7 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $products = Product::with('variants')
-            ->where('is_active', true)
+            ->where('active', true)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function serverAddToCart(productId, qty){
-    const url = `/api/cart/add`;
+    const url = `/api/cart`;
     const resp = await fetch(url, {
       method: 'POST',
       credentials: 'same-origin',
