@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Sign In - Tech Verse</title>
+    <link rel="stylesheet" href="css/signin.css">
+</head>
+<body>
+
+    <div class="backBut">
+        <input type="button" value="back" onclick="if(history.length > 1){ history.back(); } else { location.href='index.html'; }">
+    </div>
+
+    <div class="logo">
+        <h1>Tech Verse</h1>
+    </div>
+
+    <div class="wrapper">
+        <form id="login-form" action="" method="post" autocomplete="on" novalidate>
+            <h1>Sign into your account</h1>
+
+            <div class="register_link">
+                <p>New to Tech Verse? <a href="create.html">Register</a></p>
+            </div>
+
+            <div class="input_box">
+                <input id="login-email" name="email" type="email"
+                       placeholder="Email" autocomplete="username" required>
+            </div>
+
+            <div class="input_box">
+                <input id="login-password" name="password" type="password"
+                       placeholder="Password" autocomplete="current-password" required>
+            </div>
+
+            <div class="remember_forgot">
+                <label><input type="checkbox" name="remember"> Remember me</label>
+                <a href="#">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="button">Sign In</button>
+            <div id="login-msg" style="margin-top:10px;text-align:center;color:#d00"></div>
+        </form>
+
+        <p style="font-size:12px;text-align:center;color:#666;margin-top:20px">
+            By signing in you agree to our
+            <a href="privacy.html" style="color:#156082">Privacy Policy</a>.
+        </p>
+    </div>
+
+    <script src="javascript/signin.js"></script>
+    <script src="javascript/cookie-consent.js"></script>
+</body>
+</html>
