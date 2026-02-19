@@ -2,50 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return response()->json(['message' => 'Not implemented yet']);
+        return response()->json(Category::orderBy('name')->get(['id', 'name', 'slug']));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //validate and create category
-        return response()->json(['message' => 'Category created'], 201);
+        $validated = $request->validate([
+            'name' => 'required|string|max:120|unique:categories,name',
+            'slug' => 'required|string|max:140|unique:categories,slug',
+        ]);
+
+        $category = Category::create($validated);
+
+        return response()->json($category, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-        return response()->json(['message' => 'Not implemented yet']);
+        return response()->json(Category::findOrFail($id));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
-        return response()->json(['message' => 'Category updated']);
+        $category = Category::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:120|unique:categories,name,' . $id,
+            'slug' => 'sometimes|string|max:140|unique:categories,slug,' . $id,
+        ]);
+
+        $category->update($validated);
+
+        return response()->json($category);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
-        //delete category
-        return response()->json(['message' => 'Category deleted']); 
+        Category::findOrFail($id)->delete();
+        return response()->json(['message' => 'Category deleted']);
     }
 }

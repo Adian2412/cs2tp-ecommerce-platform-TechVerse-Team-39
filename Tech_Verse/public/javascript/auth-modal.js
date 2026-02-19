@@ -1,144 +1,126 @@
 /*
   auth-modal.js
-  Simple client-side modal that offers a sign-in iframe (local) and a
-  "Checkout as guest" button. Exposes `attachAuthModalToCheckout(buttonId)`
-  which binds to the specified button: if user is signed in it navigates
-  straight to checkout; otherwise it shows the modal.
+  Shows a sign-in prompt or "Checkout as guest" option when the user
+  tries to proceed to checkout without being authenticated.
 
-  The code uses the same localStorage key as `auth.js`: `techverse_auth_user`.
+  Auth check uses the server session (POST /api/auth/me) to stay
+  consistent with the rest of the app — NOT localStorage.
 */
-(function(){
-  const AUTH_KEY = 'techverse_auth_user';
+(function () {
 
-  function createModal(){
-    const overlay = document.createElement('div');
-    overlay.id = 'tv-auth-overlay';
-    overlay.style.position = 'fixed';
-    overlay.style.left = '0';
-    overlay.style.top = '0';
-    overlay.style.right = '0';
-    overlay.style.bottom = '0';
-    overlay.style.background = 'rgba(0,0,0,0.5)';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.zIndex = '9999';
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
 
-    const box = document.createElement('div');
-    box.style.width = '420px';
-    box.style.maxWidth = '94%';
-    box.style.background = '#fff';
-    box.style.padding = '16px';
-    box.style.borderRadius = '8px';
-    box.style.boxShadow = '0 6px 24px rgba(0,0,0,0.2)';
+    async function isLoggedIn() {
+        try {
+            const res = await fetch('/api/auth/me', {
+                method:      'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+            });
+            if (!res.ok) return false;
+            const data = await res.json();
+            return !!(data.authenticated && data.user);
+        } catch (e) {
+            return false;
+        }
+    }
 
-    const title = document.createElement('h3');
-    title.textContent = 'Sign in or continue as guest';
-    title.style.marginTop = '0';
+    function createModal() {
+        const overlay = document.createElement('div');
+        overlay.id = 'tv-auth-overlay';
+        overlay.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
 
-    // iframe that loads local signin page when possible
-    const iframeWrap = document.createElement('div');
-    iframeWrap.style.height = '260px';
-    iframeWrap.style.marginBottom = '12px';
-    iframeWrap.style.overflow = 'hidden';
-    iframeWrap.style.border = '1px solid #eee';
-    iframeWrap.style.borderRadius = '6px';
+        const box = document.createElement('div');
+        box.style.cssText = 'width:420px;max-width:94%;background:#fff;padding:24px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.2);position:relative';
 
-    const iframe = document.createElement('iframe');
-    iframe.src = location.protocol === 'file:' ? 'signin.html' : '/login';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = '0';
-    iframeWrap.appendChild(iframe);
+        // Close X
+        const closeX = document.createElement('button');
+        closeX.innerHTML = '&times;';
+        closeX.setAttribute('aria-label', 'Close');
+        closeX.style.cssText = 'position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer;line-height:1;color:#666';
+        closeX.addEventListener('click', removeModal);
 
-    // actions area: primary Sign In button and secondary Checkout as guest below
-    const actions = document.createElement('div');
-    actions.style.display = 'flex';
-    actions.style.flexDirection = 'column';
-    actions.style.gap = '8px';
+        const title = document.createElement('h3');
+        title.textContent = 'Sign in to continue';
+        title.style.marginTop = '0';
 
-    const signinBtn = document.createElement('button');
-    signinBtn.className = 'btn-primary';
-    signinBtn.textContent = 'Sign In';
-    signinBtn.style.width = '100%';
+        const info = document.createElement('p');
+        info.style.color = '#6b7280';
+        info.style.fontSize = '14px';
+        info.textContent = 'You need to be signed in to proceed to checkout.';
 
-    const guestBtn = document.createElement('button');
-    guestBtn.className = 'btn-ghost';
-    guestBtn.textContent = 'Checkout as guest';
-    guestBtn.style.width = '100%';
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:16px';
 
-    actions.appendChild(signinBtn);
-    actions.appendChild(guestBtn);
+        const signinBtn = document.createElement('button');
+        signinBtn.className = 'btn-primary';
+        signinBtn.textContent = 'Sign In';
+        signinBtn.style.width = '100%';
+        signinBtn.addEventListener('click', () => {
+            location.href = 'signin.html';
+        });
 
-    // top-right X close control (instead of a labeled Close button)
-    const closeX = document.createElement('button');
-    closeX.className = 'tv-auth-close-x';
-    closeX.innerHTML = '&times;';
-    closeX.setAttribute('aria-label', 'Close');
-    closeX.style.position = 'absolute';
-    closeX.style.top = '8px';
-    closeX.style.right = '8px';
-    closeX.style.border = '0';
-    closeX.style.background = 'transparent';
-    closeX.style.fontSize = '22px';
-    closeX.style.cursor = 'pointer';
-    closeX.style.lineHeight = '1';
-    box.appendChild(closeX);
+        const guestBtn = document.createElement('button');
+        guestBtn.className = 'btn-ghost';
+        guestBtn.textContent = 'Continue as guest';
+        guestBtn.style.width = '100%';
+        guestBtn.addEventListener('click', () => {
+            removeModal();
+            location.assign('checkout.html');
+        });
 
-    box.appendChild(title);
-    box.appendChild(iframeWrap);
-    box.appendChild(actions);
-    overlay.appendChild(box);
+        actions.appendChild(signinBtn);
+        actions.appendChild(guestBtn);
 
-    // behaviors
-    function removeModal(){ if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+        box.appendChild(closeX);
+        box.appendChild(title);
+        box.appendChild(info);
+        box.appendChild(actions);
+        overlay.appendChild(box);
 
-    // close X handler
-    closeX.addEventListener('click', removeModal);
-    // clicking outside the box closes as well
-    overlay.addEventListener('click', function(e){ if(e.target === overlay) removeModal(); });
+        // Click outside closes
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) removeModal();
+        });
 
-    signinBtn.addEventListener('click', function(){
-      // navigate to full sign-in page in same tab (user flow)
-      location.href = location.protocol === 'file:' ? 'signin.html' : '/login';
-    });
+        function removeModal() {
+            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }
 
-    guestBtn.addEventListener('click', function(){
-      // proceed to checkout as guest
-      // don't allow other handlers to interfere
-      removeModal();
-      location.assign('checkout.html');
-    });
+        return overlay;
+    }
 
-    return overlay;
-  }
+    function showAuthModal() {
+        const modal = createModal();
+        document.body.appendChild(modal);
+    }
 
-  // show modal (adds to body). Creates new each time to avoid leftover state.
-  function showAuthModal(){
-    const modal = createModal();
-    document.body.appendChild(modal);
-  }
+    // Attach to a checkout button: if logged in go straight to checkout,
+    // otherwise show the modal. Uses server session check, not localStorage.
+    function attachAuthModalToCheckout(buttonId) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
 
-  // Attach behavior to a checkout button id. If logged in, navigate directly.
-  function attachAuthModalToCheckout(buttonId){
-    const btn = document.getElementById(buttonId);
-    if(!btn) return;
-    btn.addEventListener('click', function(ev){
-      // if button is disabled let other handlers handle
-      if(btn.disabled) return;
-      // prevent other handlers from navigating away while we decide
-      ev.preventDefault();
-      ev.stopImmediatePropagation && ev.stopImmediatePropagation();
-      const raw = localStorage.getItem(AUTH_KEY);
-      if(raw){
-        // signed in - go straight to checkout
-        location.assign('checkout.html');
-      } else {
-        showAuthModal();
-      }
-    }, true);
-  }
+        btn.addEventListener('click', async function (ev) {
+            if (btn.disabled) return;
+            ev.preventDefault();
+            ev.stopImmediatePropagation && ev.stopImmediatePropagation();
 
-  // expose API
-  window.tvAuthModal = { showAuthModal, attachAuthModalToCheckout };
+            const loggedIn = await isLoggedIn();
+            if (loggedIn) {
+                location.assign('checkout.html');
+            } else {
+                showAuthModal();
+            }
+        }, true);
+    }
+
+    window.tvAuthModal = { showAuthModal, attachAuthModalToCheckout };
+
 })();
