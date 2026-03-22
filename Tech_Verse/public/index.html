@@ -8,67 +8,81 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
 </head>
-<body>
-    <div class="topnav">
-        <nav>
-            <li class="static" id="flag">flag</li>
-            <li class="static" id="phone-number" style="display: none;">phone number</li>
-            <div class="nav-right">
-                <li id="nav-myaccount" style="display: none;"><a href="account.html">My account</a></li>
-                <li id="nav-wishlist" style="display: none;"><a href="liked.html">Wish List</a></li>
-                <script src="geo-flag.js"></script>
-                <li id="nav-checkout" style="display: none;"><a href="#checkout">Checkout</a></li>
-            </div>
-        </nav>
+<body style="position:relative;">
+
+    <!-- Background logo -->
+    <div aria-hidden="true"
+         style="position:fixed; inset:0; display:flex; justify-content:center; align-items:center; pointer-events:none; z-index:0; overflow:hidden;">
+        <img src="images/techverse-logo.png"
+             alt=""
+             style="width:min(78vw, 950px); height:auto; object-fit:contain; opacity:0.12; transform:rotate(-8deg);">
     </div>
 
-    <hr>
+    <!-- Page content -->
+    <div style="position:relative; z-index:1;">
 
-    <div class="midnav">
-        <div class="logo">
-            <h1>Tech Verse</h1>
-        </div>
-
-        <nav class="left-of_search">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="customer.html">Browse</a></li>
-            <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
-            <li><a href="contact.html">Contact us</a></li>
-            <li><a href="aboutus.html">About us</a></li>
-        </nav>
-
-        <div class="right_of_search">
-            <input type="text" placeholder="Search..🔍">
-            <li id="nav-fav" style="display: none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-            <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-            <li id="nav-user" style="display: none;"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
-            <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
-        </div>
-    </div>
-
-    <main>
-        <div class="graphic" style="display:flex; justify-content:center; align-items:center; width:100%; min-height:420px; padding:20px 0;">
-            <img src="images/techverse-logo.png" alt="Tech Verse logo"
-                 style="max-width:100%; width:520px; height:auto; object-fit:contain; display:block;">
-        </div>
-
-        <div class="top-btn-container">
-            <a class="top-btn" href="customer.html">Explore now</a>
+        <div class="topnav">
+            <nav>
+                <li class="static" id="flag">flag</li>
+                <li class="static" id="phone-number" style="display: none;">phone number</li>
+                <div class="nav-right">
+                    <li id="nav-myaccount" style="display: none;"><a href="account.html">My account</a></li>
+                    <li id="nav-wishlist" style="display: none;"><a href="liked.html">Wish List</a></li>
+                    <script src="geo-flag.js"></script>
+                    <li id="nav-checkout" style="display: none;"><a href="#checkout">Checkout</a></li>
+                </div>
+            </nav>
         </div>
 
         <hr>
 
-        <div class="lowernav">
-            <nav>
-                <div class="btn-container" role="navigation" aria-label="site highlights">
-                    <a id="box1" class="lower-btn" href="support.html">24/7 Support</a>
-                    <a id="box2" class="lower-btn" href="delivery.html">Reliable Delivery</a>
-                    <a id="box3" class="lower-btn" href="payments.html">Secure Payments</a>
-                    <a id="box4" class="lower-btn" href="returns.html">Simple Returns</a>
-                </div>
+        <div class="midnav">
+            <div class="logo">
+                <h1>Tech Verse</h1>
+            </div>
+
+            <nav class="left-of_search">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="customer.html">Browse</a></li>
+                <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
+                <li><a href="contact.html">Contact us</a></li>
+                <li><a href="aboutus.html">About us</a></li>
             </nav>
+
+            <div class="right_of_search">
+                <input type="text" placeholder="Search..🔍">
+                <li id="nav-fav" style="display: none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
+                <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
+                <li id="nav-user" style="display: none;"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
+                <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+            </div>
         </div>
-    </main>
+
+        <main style="min-height:70vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px 20px;">
+            <div style="max-width:760px; margin:0 auto 28px;">
+                <h2 style="font-size:2.2rem; margin-bottom:14px;">Welcome to Tech Verse</h2>
+                <p style="font-size:1.05rem; line-height:1.6;">
+                    Explore a wide range of technology products, from everyday essentials to gaming gear, with secure checkout, simple returns and reliable support.
+                </p>
+            </div>
+
+            <div class="top-btn-container" style="margin-bottom:40px;">
+                <a class="top-btn" href="customer.html">Explore now</a>
+            </div>
+
+            <div class="lowernav" style="width:100%; max-width:1000px;">
+                <nav>
+                    <div class="btn-container" role="navigation" aria-label="site highlights">
+                        <a id="box1" class="lower-btn" href="support.html">24/7 Support</a>
+                        <a id="box2" class="lower-btn" href="delivery.html">Reliable Delivery</a>
+                        <a id="box3" class="lower-btn" href="payments.html">Secure Payments</a>
+                        <a id="box4" class="lower-btn" href="returns.html">Simple Returns</a>
+                    </div>
+                </nav>
+            </div>
+        </main>
+
+    </div>
 
     <script src="cart-badge.js"></script>
     <script src="auth.js"></script>
