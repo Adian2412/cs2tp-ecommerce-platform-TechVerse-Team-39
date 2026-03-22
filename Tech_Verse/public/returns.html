@@ -1,102 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-    <meta name="csrf-token" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Returns - Tech Verse</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/returns.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Request Return - Tech Verse</title>
+  <link rel="stylesheet" href="css/PP.css">
+  <link rel="stylesheet" href="css/auth.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    * { box-sizing: border-box; }
+    .returns-shell { max-width: 1100px; margin: 30px auto; padding: 0 16px; }
+    .returns-card { background:#fff; border:1px solid #e7edf4; border-radius:14px; box-shadow:0 3px 12px rgba(0,0,0,.05); padding:20px; }
+    .returns-grid { display:grid; gap:16px; }
+    .return-item { border:1px solid #e9eef5; border-radius:12px; padding:16px; display:grid; grid-template-columns:110px 1fr; gap:14px; align-items:start; }
+    .return-item img { width:100%; height:110px; object-fit:cover; border-radius:10px; background:#f4f7fa; }
+    .return-status { display:inline-block; padding:4px 8px; border-radius:999px; background:#eef3f8; font-size:12px; font-weight:700; text-transform:capitalize; }
+    .return-status.requested { background:#fff4df; color:#8a5b00; }
+    .return-status.approved { background:#eaf7ec; color:#1f6a2e; }
+    .return-status.rejected { background:#fff1f1; color:#b42318; }
+    .return-status.refunded { background:#efe8ff; color:#6941c6; }
+    textarea, button { font: inherit; }
+    textarea { width:100%; min-height:88px; margin-top:10px; border:1px solid #d7e1ea; border-radius:10px; padding:10px 12px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .btn-primary, .btn-secondary { border-radius:10px; padding:10px 14px; border:1px solid #156082; cursor:pointer; font-weight:600; }
+    .btn-primary { background:#156082; color:#fff; }
+    .btn-secondary { background:#fff; color:#156082; }
+    .muted { color:#667085; }
+    @media (max-width: 720px) { .return-item { grid-template-columns:1fr; } .return-item img { max-width:180px; } }
+  </style>
 </head>
-<body>
-  <div class="topnav">
-    <nav>
-      <li class="static" id="flag">flag</li>
-      <li class="static" id="phone-number">phone number</li>
-      <div class="nav-right">
-        <li id="nav-myaccount"><a href="account.html">My account</a></li>
-        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
-        <script src="javascript/geo-flag.js"></script>
-        <li id="nav-checkout"><a href="cart.html">Checkout</a></li>
-      </div>
-    </nav>
-  </div>
-
-  <hr>
-
+<body class="window">
   <div class="midnav">
     <div class="logo"><h1>Tech Verse</h1></div>
     <nav class="left-of_search">
       <li><a href="index.html">Home</a></li>
       <li><a href="customer.html">Browse</a></li>
+      <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
       <li><a href="contact.html">Contact us</a></li>
       <li><a href="aboutus.html">About us</a></li>
     </nav>
     <div class="right_of_search">
       <input type="text" placeholder="Search..🔍">
-       <ul class="right_of_search">
-           <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-           <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-           <li id="nav-user"><a href="#account"><i class="fa-solid fa-user"></i></a></li>
-       </ul>
-      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+      <ul class="right_of_search">
+        <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
+        <li id="nav-user" style="display:none;"><a href="account.html"><i class="fa-regular fa-user"></i></a></li>
+        <li id="nav-auth-signin"><a href="signin.html">Sign in</a></li>
+        <li id="nav-auth-register"><a href="register.html">Register</a></li>
+        <li id="nav-auth-logout" style="display:none;"><a href="#" id="logout-link">Logout</a></li>
+      </ul>
     </div>
-    <hr>
   </div>
 
-  <main class="account-main">
-    <h2>Simple Returns</h2>
-    <details class="panel-block collapsible no-bullets">
-      <summary>Hassle-free returns</summary>
-      <div class="panel-content">
-        <p>If you're not satisfied, return eligible items within 30 days for a refund or exchange.</p>
-        <ul>
-          <li>30-day return window from delivery date.</li>
-          <li>Items must be in original condition and packaging where possible.</li>
-          <li>Some items (clearance, opened software) may be final sale — see product page for details.</li>
-          <li>Refunds are processed to the original payment method within 5–10 business days after we receive the return.</li>
-        </ul>
+  <main class="returns-shell">
+    <section class="returns-card">
+      <h1 style="margin-top:0;">Request Return</h1>
+      <p id="returns-status" class="muted">Loading your order...</p>
+      <div class="actions" style="margin-bottom:16px;">
+        <a class="btn-secondary" href="account.html">Back to account</a>
       </div>
-    </details>
-
-    <details class="panel-block collapsible no-bullets">
-      <summary>How to start a return</summary>
-      <div class="panel-content">
-        <ol>
-          <li>Sign in and open your Orders in "My account".</li>
-          <li>Select the order and the item you wish to return.</li>
-          <li>Choose Return and follow the steps to print a return label.</li>
-        </ol>
-      </div>
-    </details>
-
-    <details class="panel-block collapsible">
-      <summary>Return steps</summary>
-      <div class="panel-content">
-        <div class="steps">
-          <div class="step">
-            <h4>1. Request</h4>
-            <p class="muted">Open the order and select the item to start a return.</p>
-          </div>
-          <div class="step">
-            <h4>2. Ship</h4>
-            <p class="muted">Print label and drop off with the carrier or schedule pickup.</p>
-          </div>
-          <div class="step">
-            <h4>3. Refund</h4>
-            <p class="muted">We process refunds within 5–10 business days after receipt.</p>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <details class="panel-block collapsible">
-      <summary>Need help?</summary>
-      <div class="panel-content">
-        <p>Contact support at <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="681b1d1818071a1c281c0d0b001e0d1a1b0d460d10090518040d">[email&#160;protected]</a></strong> for questions about eligibility or timelines.</p>
-      </div>
-    </details>
+      <div id="returns-items" class="returns-grid"></div>
+    </section>
   </main>
 
-  <script data-cfasync="false" src="/cd
+  <script src="returns.js"></script>
+  <script src="cart-badge.js"></script>
+  <script src="auth.js"></script>
+  <script src="global-search.js"></script>
+</body>
+</html>

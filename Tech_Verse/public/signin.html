@@ -3,54 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="">
-    <title>Sign In - Tech Verse</title>
+    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+    <title>Tech Verse</title>
     <link rel="stylesheet" href="css/signin.css">
+    <!-- TODO: When backend is available, a CSRF token meta tag will be injected by server -->
+    <meta name="csrf-token" content="">
 </head>
 <body>
 
-    <div class="backBut">
-        <input type="button" value="back" onclick="if(history.length > 1){ history.back(); } else { location.href='index.html'; }">
+     <div class="backBut">
+        <input type="button" value="back" onclick="history.back()">
     </div>
 
     <div class="logo">
-        <h1>Tech Verse</h1>
+    <h1>Tech Verse</h1>
     </div>
 
     <div class="wrapper">
-        <form id="login-form" action="" method="post" autocomplete="on" novalidate>
+        <form id="login-form" action="" method="post">
             <h1>Sign into your account</h1>
 
             <div class="register_link">
-                <p>New to Tech Verse? <a href="create.html">Register</a></p>
+                <p>New to Tech Verse?<a href="register.html">Register</a></p>
             </div>
 
             <div class="input_box">
-                <input id="login-email" name="email" type="email"
-                       placeholder="Email" autocomplete="username" required>
+                <input id="login-email" name="email" type="email" placeholder="Email" required>
             </div>
-
             <div class="input_box">
-                <input id="login-password" name="password" type="password"
-                       placeholder="Password" autocomplete="current-password" required>
+                <input id="login-password" name="password" type="password" placeholder="Password" required>
             </div>
 
             <div class="remember_forgot">
-                <label><input type="checkbox" name="remember"> Remember me</label>
+                <label><input type="checkbox">remember me</label>
                 <a href="#">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="button">Sign In</button>
-            <div id="login-msg" style="margin-top:10px;text-align:center;color:#d00"></div>
+            <button type="submit" class="button">Login</button>
+            <div id="login-msg" style="margin-top:8px;color:#d00"></div>
+
+
         </form>
-
-        <p style="font-size:12px;text-align:center;color:#666;margin-top:20px">
-            By signing in you agree to our
-            <a href="privacy.html" style="color:#156082">Privacy Policy</a>.
-        </p>
     </div>
-
-    <script src="javascript/signin.js"></script>
-    <script src="javascript/cookie-consent.js"></script>
+    <script src="signin.js"></script>
 </body>
 </html>
