@@ -1,101 +1,86 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ConsentController;
-use App\Http\Controllers\GdprController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\BasketController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductAttributeController;
+use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\ServiceReviewController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Api\AuthController as ApiAuthController;
+use App\Http\Controllers\Api\ProductApiController;
+use App\Http\Controllers\Api\ProductImageApiController;
+use App\Http\Controllers\Api\AdminController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-| All routes use the 'web' middleware group so that Laravel sessions work.
-| CSRF is excluded for api/* in bootstrap/app.php.
-*/
+Route::get('/ping', fn () => response()->json(['ok' => true, 'time' => now()->toDateTimeString()]));
 
-Route::middleware('web')->group(function () {
+// Product API used by the current frontend
+Route::get('/products', [ProductApiController::class, 'index']);
+Route::get('/products/{id}', [ProductApiController::class, 'show']);
+Route::post('/products', [ProductApiController::class, 'store']);
+Route::put('/products/{id}', [ProductApiController::class, 'update']);
+Route::patch('/products/{id}', [ProductApiController::class, 'update']);
+Route::delete('/products/{id}', [ProductApiController::class, 'destroy']);
+Route::get('/my-products', [ProductApiController::class, 'myProducts']);
+Route::post('/products/{id}/images', [ProductImageApiController::class, 'store']);
+Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
+Route::get('/products/{id}/review-eligibility', [ReviewController::class, 'eligibility']);
+Route::get('/service-reviews/me', [ServiceReviewController::class, 'myReview']);
+Route::post('/service-reviews', [ServiceReviewController::class, 'store']);
 
-    // ── Auth ──────────────────────────────────────────────────────────────────
-    Route::post('/auth/register',   [AuthController::class, 'register']);
-    Route::post('/auth/login',      [AuthController::class, 'login']);
-    Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
-    Route::post('/auth/logout',     [AuthController::class, 'logout']);
-    Route::post('/auth/me',         [AuthController::class, 'me']);
+// Auth
+Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/register', [ApiAuthController::class, 'register']);
+Route::post('/logout', [ApiAuthController::class, 'logout']);
+Route::get('/user', [ApiAuthController::class, 'user']);
+Route::post('/change-password', [ApiAuthController::class, 'changePassword']);
 
-    // ── Geo (server-side country detection — replaces client-side IP calls) ───
-    // Returns the visitor's country code based on the request IP, resolved
-    // server-side so no user IP is ever sent to a third-party from the browser.
-    Route::middleware('throttle:60,1')->get('/geo', function (Request $request) {
-        $ip = $request->ip();
+// Checkout, orders, and returns
+Route::post('/checkout', [CheckoutController::class, 'checkout']);
+Route::get('/my-orders', [OrderController::class, 'myOrders']);
+Route::post('/order-items/{id}/return', [OrderController::class, 'requestReturn']);
 
-        // In local/dev environments (127.x, ::1) just return GB as default
-        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'])) {
-            return response()->json(['country' => 'GB']);
-        }
+// Admin dashboard data and management
+Route::get('/admin/summary', [AdminController::class, 'summary']);
+Route::get('/admin/orders', [AdminController::class, 'orders']);
+Route::get('/admin/users', [AdminController::class, 'users']);
+Route::get('/admin/returns', [AdminController::class, 'returns']);
+Route::get('/admin/reviews', [AdminController::class, 'reviews']);
+Route::get('/admin/service-reviews', [ServiceReviewController::class, 'adminIndex']);
+Route::delete('/admin/service-reviews/{id}', [ServiceReviewController::class, 'destroy']);
+Route::get('/admin/contact-messages', [ContactMessageController::class, 'index']);
+Route::delete('/admin/contact-messages/{id}', [ContactMessageController::class, 'destroy']);
+Route::put('/admin/returns/{id}', [AdminController::class, 'updateReturn']);
+Route::patch('/admin/returns/{id}', [AdminController::class, 'updateReturn']);
+Route::get('/admin/categories', [AdminController::class, 'categories']);
+Route::get('/admin/products', [AdminController::class, 'products']);
+Route::post('/admin/products', [AdminController::class, 'storeProduct']);
+Route::put('/admin/products/{id}', [AdminController::class, 'updateProduct']);
+Route::patch('/admin/products/{id}', [AdminController::class, 'updateProduct']);
+Route::post('/admin/products/{id}/adjust-stock', [AdminController::class, 'adjustStock']);
+Route::post('/admin/products/{id}/toggle-active', [AdminController::class, 'toggleProductActive']);
+Route::delete('/admin/products/{id}', [AdminController::class, 'destroyProduct']);
 
-        // Use ip-api.com server-to-server (free, no key needed, not exposed to client)
-        try {
-            $url  = 'http://ip-api.com/json/' . urlencode($ip) . '?fields=countryCode';
-            $json = @file_get_contents($url);
-            if ($json) {
-                $data = json_decode($json, true);
-                if (!empty($data['countryCode'])) {
-                    return response()->json(['country' => strtoupper($data['countryCode'])]);
-                }
-            }
-        } catch (\Exception $e) {
-            // fall through to default
-        }
-
-        return response()->json(['country' => null]);
-    });
-
-    // ── Categories (public) ───────────────────────────────────────────────────
-    Route::middleware('throttle:60,1')->group(function () {
-        Route::get('/categories', [CategoryController::class, 'index']);
-    });
-
-    // ── Products (public) ─────────────────────────────────────────────────────
-    Route::middleware('throttle:60,1')->group(function () {
-        Route::get('/products',      [ProductController::class, 'index']);
-        Route::get('/products/{id}', [ProductController::class, 'show'])->where('id', '[0-9]+');
-        Route::get('/products/{id}/reviews', [ReviewController::class, 'index'])->where('id', '[0-9]+');
-    });
-
-    // ── Cookie consent (rate limited to prevent spam) ─────────────────────────
-    Route::middleware('throttle:10,1')->group(function () {
-        Route::post('/consent', [ConsentController::class, 'store']);
-    });
-
-    // ── Authenticated routes ───────────────────────────────────────────────────
-    Route::middleware('auth.session')->group(function () {
-
-        // Cart
-        Route::get('/cart',  [CartController::class, 'index']);
-        Route::post('/cart', [CartController::class, 'update']);
-
-        // Orders
-        Route::get('/orders',      [OrderController::class, 'index']);
-        Route::get('/orders/{id}', [OrderController::class, 'show'])->where('id', '[0-9]+');
-
-        // Reviews (write)
-        Route::post('/products/{id}/reviews', [ReviewController::class, 'store'])->where('id', '[0-9]+');
-
-        // Profile
-        Route::put('/user',             [UserController::class, 'update']);
-        Route::put('/user/password',    [UserController::class, 'changePassword']);
-
-        // GDPR
-        Route::get('/gdpr/export',            [GdprController::class, 'export']);
-        Route::post('/gdpr/request-deletion', [GdprController::class, 'requestDeletion']);
-
-    });
-
-});
+// Resource routes
+Route::apiResources([
+    'users' => UserController::class,
+    'addresses' => AddressController::class,
+    'baskets' => BasketController::class,
+    'categories' => CategoryController::class,
+    'contact-messages' => ContactMessageController::class,
+    'orders' => OrderController::class,
+    'product-attributes' => ProductAttributeController::class,
+    'product-images' => ProductImageController::class,
+    'product-variants' => ProductVariantController::class,
+    'reviews' => ReviewController::class,
+    'stocks' => StockController::class,
+    'stock-movements' => StockMovementController::class,
+]);
