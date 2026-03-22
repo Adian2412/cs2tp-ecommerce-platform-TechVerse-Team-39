@@ -4,97 +4,116 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Update the authenticated user's profile (name, email).
-     */
-    public function update(Request $request)
+    protected function tryHeaderAuth(Request $request): bool
     {
-        $userId = $request->session()->get('auth_user_id');
-        $user   = User::findOrFail($userId);
-
-        $validated = $request->validate([
-            'name'  => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:users,email,' . $userId,
-        ]);
-
-        $user->update($validated);
-
-        return response()->json([
-            'message' => 'Profile updated.',
-            'user'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
-        ]);
-    }
-
-    /**
-     * Change the authenticated user's password.
-     */
-    public function changePassword(Request $request)
-    {
-        $userId = $request->session()->get('auth_user_id');
-        $user   = User::findOrFail($userId);
-
-        $validated = $request->validate([
-            'current_password' => 'required|string',
-            'new_password'     => 'required|string|min:8|confirmed',
-        ]);
-
-        if (!Hash::check($validated['current_password'], $user->password_hash)) {
-            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        if (Auth::check()) {
+            return true;
         }
 
-        $user->update(['password_hash' => Hash::make($validated['new_password'])]);
+        $token = $request->header('X-Session-Token');
+        if (!$token) {
+            return false;
+        }
 
-        return response()->json(['message' => 'Password updated successfully.']);
+        $session = DB::table('sessions')->where('id', $token)->first();
+        if ($session && $session->user_id) {
+            $user = User::find($session->user_id);
+            if ($user) {
+                Auth::login($user);
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    /**
-     * List all users (admin only).
-     */
     public function index(Request $request)
     {
-        $userId = $request->session()->get('auth_user_id');
-        $actor  = User::findOrFail($userId);
+        $this->tryHeaderAuth($request);
+        $user = Auth::user();
 
-        if ($actor->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        if (!$user || $user->role !== 'admin') {
+            return response()->json(['error' => 'Admin access required'], 403);
         }
 
-        return response()->json(User::select('id', 'name', 'email', 'role', 'created_at')->paginate(20));
+        return response()->json(User::orderByDesc('id')->paginate(50));
     }
 
-    /**
-     * Show a single user (admin only).
-     */
-    public function show(Request $request, $id)
+    public function show(Request $request, string $id)
     {
-        $userId = $request->session()->get('auth_user_id');
-        $actor  = User::findOrFail($userId);
+        $this->tryHeaderAuth($request);
+        $current = Auth::user();
+        $target = User::findOrFail($id);
 
-        if ($actor->role !== 'admin' && $actor->id !== (int) $id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        if (!$current || ($current->role !== 'admin' && (int) $current->id !== (int) $target->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
         }
 
-        return response()->json(User::findOrFail($id));
+        $data = $target->toArray();
+        $data['username'] = $target->name;
+        return response()->json($data);
     }
 
-    /**
-     * Delete a user (admin only).
-     */
-    public function destroy(Request $request, $id)
+    public function update(Request $request, string $id)
     {
-        $userId = $request->session()->get('auth_user_id');
-        $actor  = User::findOrFail($userId);
+        $this->tryHeaderAuth($request);
+        $current = Auth::user();
+        $target = User::findOrFail($id);
 
-        if ($actor->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        if (!$current || ($current->role !== 'admin' && (int) $current->id !== (int) $target->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
         }
 
-        User::findOrFail($id)->delete();
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:120',
+            'username' => 'sometimes|string|max:120',
+            'email' => 'sometimes|email|max:190|unique:users,email,' . $target->id,
+            'role' => 'sometimes|in:customer,staff,admin',
+            'password' => 'sometimes|string|min:8',
+        ]);
 
-        return response()->json(null, 204);
+        if (array_key_exists('username', $validated) && !array_key_exists('name', $validated)) {
+            $validated['name'] = $validated['username'];
+            unset($validated['username']);
+        }
+
+        if (($validated['role'] ?? null) && $current->role !== 'admin') {
+            unset($validated['role']);
+        }
+
+        if (!empty($validated['password'])) {
+            $validated['password_hash'] = Hash::make($validated['password']);
+            unset($validated['password']);
+        }
+
+        $target->update($validated);
+
+        $data = $target->fresh()->toArray();
+        $data['username'] = $data['name'] ?? null;
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $data,
+        ]);
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        $this->tryHeaderAuth($request);
+        $current = Auth::user();
+        $target = User::findOrFail($id);
+
+        if (!$current || ($current->role !== 'admin' && (int) $current->id !== (int) $target->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+
+        $target->delete();
+        return response()->json(['message' => 'User deleted successfully']);
     }
 }
