@@ -9,6 +9,10 @@ class OrderItem extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
+    protected $table = 'order_items';
+
     protected $fillable = [
         'order_id',
         'product_variant_id',
@@ -21,16 +25,18 @@ class OrderItem extends Model
         'quantity' => 'integer',
     ];
 
-    //relationships
-    public function order() {
+    public function order()
+    {
         return $this->belongsTo(Order::class);
     }
 
-    public function variant() {
+    public function variant()
+    {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    public function returns() {
+    public function returns()
+    {
         return $this->hasMany(ReturnModel::class, 'order_item_id');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -19,21 +20,58 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password_hash',
+        'remember_token',
     ];
 
-    // Map Laravel's expected 'password' attribute to our 'password_hash' column
-    public function getAuthPassword(): string
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    public function getAuthPassword()
     {
         return $this->password_hash;
     }
 
-    public function baskets()
+    public function setPasswordAttribute($value)
     {
-        return $this->hasMany(Basket::class);
+        if (!is_string($value) || $value === '') {
+            return;
+        }
+
+        // Avoid double-hashing when a bcrypt hash is already supplied.
+        $this->attributes['password_hash'] = Str::startsWith($value, ['$2y$', '$2b$', '$argon'])
+            ? $value
+            : bcrypt($value);
     }
 
-    public function gdprDeletionRequests()
+    public function addresses()
     {
-        return $this->hasMany(GdprDeletionRequest::class);
+        return $this->hasMany(Address::class);
+    }
+
+    public function basket()
+    {
+        return $this->hasOne(Basket::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function staffProfile()
+    {
+        return $this->hasOne(StaffProfile::class);
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
     }
 }

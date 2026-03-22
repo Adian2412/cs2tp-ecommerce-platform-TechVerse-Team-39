@@ -9,6 +9,8 @@ class StockMovement extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'product_variant_id',
         'movement_type',
@@ -22,12 +24,13 @@ class StockMovement extends Model
         'created_at' => 'datetime',
     ];
 
-    //relationships
-    public function variant() {
+    public function variant()
+    {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    public function creator() {
+    public function creator()
+    {
         return $this->belongsTo(User::class, 'created_by');
     }
 }

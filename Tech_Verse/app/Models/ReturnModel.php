@@ -5,24 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductImage extends Model
+class ReturnModel extends Model
 {
     use HasFactory;
 
+    protected $table = 'returns';
+
+    public $timestamps = false;
+
     protected $fillable = [
-        'product_id',
-        'image_path',
-        'is_primary',
+        'order_item_id',
+        'reason',
+        'status',
     ];
 
     protected $casts = [
-        'is_primary' => 'boolean',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
-    public function product()
+    public function orderItem()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(OrderItem::class, 'order_item_id');
     }
 }

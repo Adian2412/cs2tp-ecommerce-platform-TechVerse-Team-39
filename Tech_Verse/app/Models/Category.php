@@ -7,20 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    //decides colums that can be mass assigned
     use HasFactory;
+
+    public $timestamps = false;
+
     protected $fillable = [
         'name',
         'slug',
     ];
 
-
-    //relationships
-public function products()
+    public function products()
     {
-        //each category has many products
         return $this->hasMany(Product::class);
     }
 }
-
-

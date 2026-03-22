@@ -9,6 +9,10 @@ class Stock extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
+    protected $table = 'stock';
+
     protected $fillable = [
         'product_variant_id',
         'quantity',
@@ -22,9 +26,8 @@ class Stock extends Model
         'last_updated' => 'datetime',
     ];
 
-    //relationships
-
-    public function variant() {
+    public function variant()
+    {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

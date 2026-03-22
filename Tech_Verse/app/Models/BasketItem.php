@@ -2,11 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BasketItem extends Model
 {
-    protected $fillable = ['basket_id', 'product_variant_id', 'quantity'];
+    use HasFactory;
+
+    public $timestamps = false;
+
+    protected $table = 'basket_items';
+
+    protected $fillable = [
+        'basket_id',
+        'product_variant_id',
+        'quantity',
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer',
+    ];
 
     public function basket()
     {
