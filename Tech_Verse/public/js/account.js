@@ -1,322 +1,437 @@
-// account.js - wired to Laravel backend
+// account.js - final wired version for Laravel backend
 document.addEventListener('DOMContentLoaded', async () => {
-
-    function getCsrfToken() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
-    }
-
-    // ── Load current user from session and populate profile fields ────────────
-    const nameEl  = document.getElementById('acc-name');
-    const emailEl = document.getElementById('acc-email');
-
-    let currentUser = null;
-
+  function apiBase() {
     try {
-        const res = await fetch('/api/auth/me', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.authenticated && data.user) {
-                currentUser = data.user;
-                if (nameEl)  nameEl.value  = currentUser.name  || '';
-                if (emailEl) emailEl.value = currentUser.email || '';
-            }
-        }
-    } catch (e) {
-        console.warn('Could not load user session:', e);
-    }
+      const meta = document.querySelector('meta[name="tv-api-base"]');
+      const raw = (window.TV_API_BASE || window.__TV_API_BASE__ || (meta && meta.content) || '').trim();
+      return raw ? raw.replace(/\/+$/, '') : '';
+    } catch (e) { return ''; }
+  }
 
-    // If not logged in, redirect to sign in
-    if (!currentUser) {
-        location.href = 'signin.html';
-        return;
-    }
+  const API_BASE = apiBase();
 
-    // ── Save profile (placeholder - backend endpoint not yet implemented) ─────
-    document.getElementById('save-account').addEventListener('click', () => {
-        // TODO: wire to PUT /api/user when that endpoint is built
-        alert('Profile saving is not yet connected to the backend.');
+  function apiUrl(path) {
+    return `${API_BASE}${path}`;
+  }
+
+  function getHeaders(withJson = false) {
+    const headers = { Accept: 'application/json' };
+    const token = localStorage.getItem('techverse_session_token');
+    if (token) headers['X-Session-Token'] = token;
+    if (withJson) headers['Content-Type'] = 'application/json';
+    return headers;
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatMoney(value) {
+    const num = Number(value || 0);
+    return '£' + num.toFixed(2);
+  }
+
+  function formatDate(value) {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? 'Unknown date' : d.toLocaleDateString();
+  }
+
+  function setMessage(el, message, ok = true) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.style.color = ok ? '#1f6a2e' : '#b42318';
+  }
+
+  async function fetchCurrentUser() {
+    const res = await fetch(apiUrl('/api/auth/me'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: getHeaders(true),
+      body: JSON.stringify({}),
     });
+    if (!res.ok) throw new Error('Not authenticated');
+    const data = await res.json();
+    if (!data.authenticated || !data.user) throw new Error('Not authenticated');
+    return data.user;
+  }
 
-    // ── Change password (placeholder) ─────────────────────────────────────────
-    document.getElementById('change-pass').addEventListener('click', () => {
-        const cur = document.getElementById('acc-curpass').value;
-        const nw  = document.getElementById('acc-newpass').value;
-        if (!nw) { alert('Enter a new password.'); return; }
-        // TODO: wire to password change endpoint when built
-        alert('Password change is not yet connected to the backend.');
+  let currentUser = null;
+  try {
+    currentUser = await fetchCurrentUser();
+    localStorage.setItem('techverse_auth_user', JSON.stringify(currentUser));
+  } catch (e) {
+    location.href = 'signin.html';
+    return;
+  }
+
+  // Populate account header/profile
+  const nameEl = document.getElementById('acc-name');
+  const emailEl = document.getElementById('acc-email');
+  if (nameEl) nameEl.value = currentUser.name || '';
+  if (emailEl) emailEl.value = currentUser.email || '';
+  const navName = document.getElementById('nav-name');
+  const navEmail = document.getElementById('nav-email');
+  const navAvatar = document.getElementById('nav-avatar');
+  if (navName) navName.textContent = currentUser.name || 'User';
+  if (navEmail) navEmail.textContent = currentUser.email || '';
+  if (navAvatar) navAvatar.textContent = (currentUser.name || '?').trim().charAt(0).toUpperCase() || '?';
+
+  // Profile save
+  const accountMsg = document.getElementById('account-msg');
+  const saveBtn = document.getElementById('save-account');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true;
+      setMessage(accountMsg, 'Saving changes...', true);
+      try {
+        const res = await fetch(apiUrl(`/api/users/${currentUser.id}`), {
+          method: 'PUT',
+          credentials: 'include',
+          headers: getHeaders(true),
+          body: JSON.stringify({ name: (nameEl?.value || '').trim(), email: (emailEl?.value || '').trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Unable to save account details.');
+        currentUser = data.user || currentUser;
+        localStorage.setItem('techverse_auth_user', JSON.stringify(currentUser));
+        if (navName) navName.textContent = currentUser.name || 'User';
+        if (navEmail) navEmail.textContent = currentUser.email || '';
+        if (navAvatar) navAvatar.textContent = (currentUser.name || '?').trim().charAt(0).toUpperCase() || '?';
+        setMessage(accountMsg, 'Account details updated successfully.', true);
+      } catch (error) {
+        setMessage(accountMsg, error.message, false);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
+
+  // Change password
+  const passMsg = document.getElementById('pass-msg');
+  const changePassBtn = document.getElementById('change-pass');
+  if (changePassBtn) {
+    changePassBtn.addEventListener('click', async () => {
+      const currentPassword = document.getElementById('acc-curpass')?.value || '';
+      const newPassword = document.getElementById('acc-newpass')?.value || '';
+      if (!currentPassword || !newPassword) {
+        setMessage(passMsg, 'Please enter both your current password and a new password.', false);
+        return;
+      }
+      changePassBtn.disabled = true;
+      setMessage(passMsg, 'Updating password...', true);
+      try {
+        const res = await fetch(apiUrl('/api/change-password'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: getHeaders(true),
+          body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Unable to change password.');
         document.getElementById('acc-curpass').value = '';
         document.getElementById('acc-newpass').value = '';
+        setMessage(passMsg, 'Password changed successfully.', true);
+      } catch (error) {
+        setMessage(passMsg, error.message, false);
+      } finally {
+        changePassBtn.disabled = false;
+      }
     });
+  }
 
-    // ── Sign out ──────────────────────────────────────────────────────────────
-    const signoutBtn = document.getElementById('signout');
-    if (signoutBtn) {
-        signoutBtn.addEventListener('click', async () => {
-            try {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                    },
-                });
-            } catch (e) { /* ignore */ }
-            location.href = 'index.html';
+  // Sign out
+  const signoutBtn = document.getElementById('signout');
+  if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include', headers: getHeaders(true), body: JSON.stringify({}) });
+      } catch (e) {}
+      localStorage.removeItem('techverse_auth_user');
+      localStorage.removeItem('techverse_session_token');
+      location.href = 'index.html';
+    });
+  }
+
+  // My listings / sell a product
+  const accountListings = document.getElementById('account-listings');
+  const sellMsg = document.getElementById('sell-msg');
+
+  async function loadMyProducts() {
+    const res = await fetch(apiUrl('/api/my-products?per_page=200'), { credentials: 'include', headers: getHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unable to load your listings.');
+    return Array.isArray(data.data) ? data.data : (Array.isArray(data.products) ? data.products : (Array.isArray(data) ? data : []));
+  }
+
+  function renderListings(items) {
+    if (!accountListings) return;
+    accountListings.innerHTML = '';
+    if (!items.length) {
+      accountListings.innerHTML = '<p class="tv-muted">You have no listings yet.</p>';
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'tv-order-card';
+      card.style.marginBottom = '12px';
+      const image = (item.images && item.images[0] && item.images[0].image_path) || item.image_url || 'images/placeholder.png';
+      const stock = item.variants && item.variants[0] && item.variants[0].stock ? Number(item.variants[0].stock.quantity || 0) : Number(item.stock || 0);
+      const price = item.variants && item.variants[0] ? Number(item.variants[0].price || item.price || 0) : Number(item.price || 0);
+      card.innerHTML = `
+        <div class="tv-order-card__body" style="display:flex;gap:14px;align-items:flex-start;">
+          <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name || 'Product')}" style="width:86px;height:86px;object-fit:cover;border-radius:10px;border:1px solid var(--tv-border);" onerror="this.src='images/placeholder.png'">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(item.name || 'Untitled product')}</div>
+            <div class="tv-muted" style="font-size:13px;margin-bottom:6px;">${escapeHtml(item.description || '')}</div>
+            <div style="font-size:13px;color:var(--tv-text-2);">Price: ${formatMoney(price)} · Stock: ${stock} · ${item.active ? 'Active' : 'Inactive'}</div>
+          </div>
+        </div>`;
+      accountListings.appendChild(card);
+    });
+  }
+
+  async function refreshListings() {
+    if (!accountListings) return;
+    accountListings.innerHTML = '<p class="tv-muted">Loading your listings...</p>';
+    try {
+      const items = await loadMyProducts();
+      renderListings(items);
+    } catch (e) {
+      accountListings.innerHTML = `<p class="tv-muted">${escapeHtml(e.message)}</p>`;
+    }
+  }
+
+  const sellBtn = document.getElementById('sell-product');
+  if (sellBtn) {
+    sellBtn.addEventListener('click', async () => {
+      const payload = {
+        name: (document.getElementById('sell-name')?.value || '').trim(),
+        category: (document.getElementById('sell-category')?.value || '').trim(),
+        price: (document.getElementById('sell-price')?.value || '').trim(),
+        stock: (document.getElementById('sell-stock')?.value || '').trim(),
+        brand: (document.getElementById('sell-brand')?.value || '').trim(),
+        image_url: (document.getElementById('sell-image')?.value || '').trim(),
+        description: (document.getElementById('sell-description')?.value || '').trim(),
+      };
+
+      if (!payload.name || !payload.category || !payload.price || !payload.stock) {
+        setMessage(sellMsg, 'Please fill in the product name, category, price and stock quantity.', false);
+        return;
+      }
+
+      sellBtn.disabled = true;
+      setMessage(sellMsg, 'Creating listing...', true);
+      try {
+        const res = await fetch(apiUrl('/api/products'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload),
         });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Unable to create listing.');
+        ['sell-name','sell-category','sell-price','sell-stock','sell-brand','sell-image','sell-description'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        setMessage(sellMsg, 'Product listed successfully.', true);
+        refreshListings();
+      } catch (error) {
+        setMessage(sellMsg, error.message, false);
+      } finally {
+        sellBtn.disabled = false;
+      }
+    });
+  }
+
+  // Orders
+  const ordersWrap = document.getElementById('placed-orders');
+
+  function renderReturnBadge(item) {
+    const returns = Array.isArray(item.returns) ? item.returns : [];
+    if (!returns.length) return '';
+    const latest = returns[0];
+    return `<div class="tv-muted" style="font-size:12px;margin-top:4px;"><strong>Return:</strong> ${escapeHtml(latest.status)}${latest.reason ? ' · ' + escapeHtml(latest.reason) : ''}</div>`;
+  }
+
+  function createActionButton(label, className, onClick) {
+    const btn = document.createElement('button');
+    btn.className = className;
+    btn.textContent = label;
+    btn.type = 'button';
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function renderOrders(orders) {
+    if (!ordersWrap) return;
+    ordersWrap.innerHTML = '';
+    if (!orders.length) {
+      ordersWrap.innerHTML = '<p class="tv-muted">You have no orders yet.</p>';
+      return;
     }
 
-    // ── Sell a product ────────────────────────────────────────────────────────
-    const sellBtn = document.getElementById('sell-product');
-    if (sellBtn) sellBtn.addEventListener('click', () => { location.href = 'seller.html'; });
+    orders.forEach(order => {
+      const card = document.createElement('div');
+      card.className = 'tv-order-card';
+      const itemsHtml = (order.items || []).map(item => {
+        const product = item.variant && item.variant.product ? item.variant.product : null;
+        const productId = (product && product.id) || (item.variant && item.variant.product_id) || null;
+        return `
+          <div style="padding:10px 0;border-bottom:1px solid var(--tv-border);">
+            <div style="font-weight:600;">${escapeHtml(product && product.name ? product.name : 'Product')}</div>
+            <div class="tv-muted" style="font-size:13px;">Qty: ${Number(item.quantity || 0)} · ${formatMoney(item.unit_price || 0)} each</div>
+            ${renderReturnBadge(item)}
+            ${productId ? `<div style="margin-top:6px;"><a href="product_page.html?id=${encodeURIComponent(productId)}&review=1" style="color:var(--tv-primary);font-size:13px;font-weight:600;">Review product</a></div>` : ''}
+          </div>`;
+      }).join('');
 
-    // ── My Listings (localStorage - seller backend not yet built) ─────────────
-    const LISTINGS_KEY   = 'techverse_listings_v1';
-    const accountListWrap = document.getElementById('account-listings');
+      card.innerHTML = `
+        <div class="tv-order-card__head">
+          <strong>Order #${order.id}</strong>
+          <span>Status: ${escapeHtml(order.status || 'pending')}</span>
+          <span>Placed: ${formatDate(order.created_at)}</span>
+          <span>Total: ${formatMoney(order.total)}</span>
+        </div>
+        <div class="tv-order-card__body">${itemsHtml || '<p class="tv-muted">No item details available.</p>'}</div>`;
 
-    function loadListings() {
-        try { return JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]'); } catch (e) { return []; }
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;padding:0 16px 16px;';
+      actions.appendChild(createActionButton('View Order', 'tv-btn tv-btn--ghost', () => {
+        alert(`Order #${order.id}\nStatus: ${order.status}\nTotal: ${formatMoney(order.total)}`);
+      }));
+
+      const orderStatus = String(order.status || '').toLowerCase();
+      const eligibleForReturn = ['paid', 'shipped', 'delivered'].includes(orderStatus) && (order.items || []).some(item => !(Array.isArray(item.returns) && item.returns.length));
+      if (eligibleForReturn) {
+        actions.appendChild(createActionButton('Request Return', 'tv-btn tv-btn--ghost', () => {
+          location.href = `returns.html?order=${encodeURIComponent(order.id)}`;
+        }));
+      }
+
+      const reviewableItems = (order.items || []).filter(item => {
+        const product = item.variant && item.variant.product ? item.variant.product : null;
+        return !!((product && product.id) || (item.variant && item.variant.product_id));
+      });
+      reviewableItems.forEach(item => {
+        const product = item.variant && item.variant.product ? item.variant.product : null;
+        const productId = (product && product.id) || (item.variant && item.variant.product_id);
+        const label = product && product.name ? `Review: ${product.name}` : 'Review Product';
+        actions.appendChild(createActionButton(label, 'tv-btn tv-btn--ghost', () => {
+          location.href = `product_page.html?id=${encodeURIComponent(productId)}&review=1`;
+        }));
+      });
+
+      card.appendChild(actions);
+      ordersWrap.appendChild(card);
+    });
+  }
+
+  async function loadOrders() {
+    if (!ordersWrap) return;
+    ordersWrap.innerHTML = '<p class="tv-muted">Loading orders...</p>';
+    try {
+      const res = await fetch(apiUrl('/api/my-orders'), { credentials: 'include', headers: getHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load orders.');
+      renderOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (e) {
+      ordersWrap.innerHTML = `<p class="tv-muted">${escapeHtml(e.message || 'Could not load orders.')}</p>`;
     }
-    function saveListings(items) {
-        localStorage.setItem(LISTINGS_KEY, JSON.stringify(items));
+  }
+
+  // Service review
+  const serviceStatus = document.getElementById('service-review-status');
+  const serviceSaveBtn = document.getElementById('save-service-review');
+  const serviceDeleteBtn = document.getElementById('delete-service-review');
+  const serviceRatingEl = document.getElementById('service-rating');
+  const serviceCommentEl = document.getElementById('service-comment');
+  let existingServiceReview = null;
+
+  function setServiceMessage(msg, ok = true) {
+    setMessage(serviceStatus, msg, ok);
+  }
+
+  async function loadServiceReview() {
+    if (!serviceRatingEl || !serviceCommentEl) return;
+    try {
+      const res = await fetch(apiUrl('/api/service-reviews/me'), { credentials: 'include', headers: getHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load service review.');
+      existingServiceReview = data.review || null;
+      if (existingServiceReview) {
+        serviceRatingEl.value = String(existingServiceReview.rating || 5);
+        serviceCommentEl.value = existingServiceReview.comment || '';
+        if (serviceDeleteBtn) serviceDeleteBtn.style.display = '';
+        setServiceMessage('Your existing service review is loaded below. You can update it any time.', true);
+      } else {
+        serviceRatingEl.value = '5';
+        serviceCommentEl.value = '';
+        if (serviceDeleteBtn) serviceDeleteBtn.style.display = 'none';
+        setServiceMessage('', true);
+      }
+    } catch (e) {
+      setServiceMessage(e.message, false);
     }
+  }
 
-    function renderAccountListings() {
-        const items = loadListings();
-        accountListWrap.innerHTML = '';
-        if (!items.length) {
-            accountListWrap.innerHTML = '<p class="muted">You have no listings yet.</p>';
-            return;
-        }
-        items.slice().reverse().forEach(it => {
-            const card    = document.createElement('div'); card.className = 'listing-card';
-            const img     = document.createElement('img'); img.className = 'listing-thumb'; img.src = (it.images && it.images[0]) || '';
-            const info    = document.createElement('div'); info.className = 'listing-info';
-            const title   = document.createElement('div'); title.className = 'listing-title'; title.textContent = it.title;
-            const price   = document.createElement('div'); price.className = 'listing-price'; price.textContent = it.price;
-            const meta    = document.createElement('div'); meta.className  = 'listing-meta';  meta.textContent  = it.desc || '';
-            const actions = document.createElement('div'); actions.className = 'listing-actions';
-
-            if (it.sold) {
-                const soldLabel   = document.createElement('div'); soldLabel.textContent = 'Sold'; soldLabel.className = 'muted';
-                const trackingWrap = document.createElement('div'); trackingWrap.className = 'listing-meta';
-
-                function renderTrackingUI(listing) {
-                    trackingWrap.innerHTML = '';
-                    if (!listing.tracking) {
-                        const input   = document.createElement('input');   input.className   = 'tracking-input'; input.placeholder = 'Tracking link';
-                        const saveBtn = document.createElement('button');  saveBtn.className = 'btn-small';      saveBtn.textContent = 'Save';
-                        const cancel  = document.createElement('button');  cancel.className  = 'btn-small';      cancel.textContent  = 'Cancel';
-                        saveBtn.addEventListener('click', () => {
-                            const val = input.value.trim(); if (!val) { alert('Enter a tracking link'); return; }
-                            const all = loadListings(); const idx = all.findIndex(x => x.id === listing.id); if (idx === -1) return;
-                            all[idx].tracking = val; all[idx].trackingEditsRemaining = 3;
-                            saveListings(all); renderAccountListings();
-                        });
-                        cancel.addEventListener('click', () => renderAccountListings());
-                        trackingWrap.appendChild(input); trackingWrap.appendChild(saveBtn); trackingWrap.appendChild(cancel);
-                    } else {
-                        const isUrl = /^https?:\/\//i.test(listing.tracking);
-                        if (isUrl) {
-                            const a = document.createElement('a'); a.href = listing.tracking; a.target = '_blank'; a.textContent = listing.tracking; a.style.display = 'block'; a.style.marginBottom = '6px';
-                            trackingWrap.appendChild(a);
-                        } else {
-                            const tdiv = document.createElement('div'); tdiv.textContent = listing.tracking; tdiv.style.marginBottom = '6px'; trackingWrap.appendChild(tdiv);
-                        }
-                        const editsLeft = typeof listing.trackingEditsRemaining === 'number' ? listing.trackingEditsRemaining : 0;
-                        const editsInfo = document.createElement('div'); editsInfo.className = 'muted'; editsInfo.style.fontSize = '12px'; editsInfo.textContent = 'Edits left: ' + editsLeft; editsInfo.style.marginBottom = '6px';
-                        trackingWrap.appendChild(editsInfo);
-                        const editBtn = document.createElement('button'); editBtn.className = 'btn-small'; editBtn.textContent = 'Edit';
-                        if (editsLeft <= 0) { editBtn.disabled = true; editBtn.title = 'No edits remaining'; }
-                        editBtn.addEventListener('click', () => {
-                            trackingWrap.innerHTML = '';
-                            const input   = document.createElement('input');  input.className   = 'tracking-input'; input.value = listing.tracking || ''; input.placeholder = 'Tracking link';
-                            const saveBtn = document.createElement('button'); saveBtn.className = 'btn-small'; saveBtn.textContent = 'Save';
-                            const cancel  = document.createElement('button'); cancel.className  = 'btn-small'; cancel.textContent  = 'Cancel';
-                            saveBtn.addEventListener('click', () => {
-                                const val = input.value.trim(); if (!val) { alert('Enter a tracking link'); return; }
-                                const all = loadListings(); const idx = all.findIndex(x => x.id === listing.id); if (idx === -1) return;
-                                if (all[idx].tracking !== val) {
-                                    if (typeof all[idx].trackingEditsRemaining !== 'number') all[idx].trackingEditsRemaining = 3;
-                                    if (all[idx].trackingEditsRemaining > 0) all[idx].trackingEditsRemaining--;
-                                    all[idx].tracking = val;
-                                    saveListings(all);
-                                }
-                                renderAccountListings();
-                            });
-                            cancel.addEventListener('click', () => renderAccountListings());
-                            trackingWrap.appendChild(input); trackingWrap.appendChild(saveBtn); trackingWrap.appendChild(cancel);
-                        });
-                        trackingWrap.appendChild(editBtn);
-                    }
-                }
-
-                renderTrackingUI(it);
-                actions.appendChild(soldLabel); actions.appendChild(trackingWrap);
-            } else {
-                const trackInput = document.createElement('input');  trackInput.className = 'tracking-input'; trackInput.placeholder = 'Tracking link';
-                const markBtn    = document.createElement('button'); markBtn.className    = 'btn-small';      markBtn.textContent    = 'Mark as sold';
-                markBtn.addEventListener('click', () => {
-                    const all = loadListings(); const idx = all.findIndex(x => x.id === it.id); if (idx === -1) return;
-                    all[idx].sold = true;
-                    const t = trackInput.value.trim(); if (t) { all[idx].tracking = t; all[idx].trackingEditsRemaining = 3; }
-                    all[idx].soldDate = Date.now();
-                    saveListings(all); renderAccountListings();
-                });
-                actions.appendChild(trackInput); actions.appendChild(markBtn);
-            }
-
-            const delBtn = document.createElement('button'); delBtn.className = 'btn-remove'; delBtn.textContent = 'Delete';
-            if (it.sold) { delBtn.disabled = true; delBtn.title = 'Cannot delete sold listing'; }
-            delBtn.addEventListener('click', () => {
-                if (it.sold) return;
-                if (!confirm('Delete this listing?')) return;
-                const all      = loadListings();
-                const removed  = all.find(x => x.id === it.id);
-                const filtered = all.filter(x => x.id !== it.id);
-                saveListings(filtered); renderAccountListings();
-                if (removed) {
-                    showUndoSnackbar('Listing deleted', () => {
-                        const cur = loadListings(); cur.push(removed); saveListings(cur); renderAccountListings();
-                    });
-                }
-            });
-            actions.appendChild(delBtn);
-
-            info.appendChild(title); info.appendChild(price); info.appendChild(meta); info.appendChild(actions);
-            card.appendChild(img); card.appendChild(info);
-            accountListWrap.appendChild(card);
+  if (serviceSaveBtn) {
+    serviceSaveBtn.addEventListener('click', async () => {
+      const rating = Number(serviceRatingEl?.value || 5);
+      const comment = (serviceCommentEl?.value || '').trim();
+      serviceSaveBtn.disabled = true;
+      setServiceMessage('Saving service review...', true);
+      try {
+        const res = await fetch(apiUrl('/api/service-reviews'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: getHeaders(true),
+          body: JSON.stringify({ rating, comment }),
         });
-    }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Unable to save service review.');
+        existingServiceReview = data.review || existingServiceReview;
+        if (serviceDeleteBtn) serviceDeleteBtn.style.display = '';
+        setServiceMessage('Service review saved successfully.', true);
+      } catch (e) {
+        setServiceMessage(e.message, false);
+      } finally {
+        serviceSaveBtn.disabled = false;
+      }
+    });
+  }
 
-    // ── Placed Orders (fetched from server) ───────────────────────────────────
-    const ordersWrap = document.getElementById('placed-orders');
-
-    function formatDate(ts) {
-        return new Date(ts).toLocaleDateString();
-    }
-
-    function statusLabel(status) {
-        const map = {
-            pending:   { text: 'Pending',      cls: 'status-transit' },
-            paid:      { text: 'Paid',          cls: 'status-transit' },
-            shipped:   { text: 'Shipped',       cls: 'status-out' },
-            returned:  { text: 'Returned',      cls: 'status-delivered' },
-            cancelled: { text: 'Cancelled',     cls: 'status-transit' },
-            delivered: { text: 'Delivered',     cls: 'status-delivered' },
-        };
-        return map[status] || { text: status, cls: '' };
-    }
-
-    function renderOrders(orders) {
-        ordersWrap.innerHTML = '';
-        if (!orders.length) {
-            ordersWrap.innerHTML = '<p class="muted">You have no orders yet.</p>';
-            return;
-        }
-        orders.forEach(o => {
-            const card    = document.createElement('div'); card.className = 'order-card';
-            const head    = document.createElement('div'); head.className = 'order-head';
-            const idEl    = document.createElement('div'); idEl.className = 'order-id';   idEl.textContent = '#' + o.id;
-            const sl      = statusLabel(o.status);
-            const statusEl = document.createElement('div'); statusEl.className = 'order-status ' + sl.cls; statusEl.textContent = sl.text;
-            head.appendChild(idEl); head.appendChild(statusEl);
-
-            const meta = document.createElement('div'); meta.className = 'order-meta';
-            meta.textContent = 'Placed: ' + formatDate(o.created_at) + '  ·  Total: £' + Number(o.total || 0).toFixed(2);
-
-            // List items in the order
-            const itemsWrap = document.createElement('div'); itemsWrap.className = 'order-items';
-            const orderItems = o.items || [];
-            if (orderItems.length) {
-                orderItems.forEach(item => {
-                    const row   = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;align-items:center;margin-bottom:6px';
-                    const iname = document.createElement('div'); iname.className = 'order-info';
-                    const ititle = document.createElement('div'); ititle.className = 'listing-title';
-                    ititle.textContent = (item.variant && item.variant.product && item.variant.product.name) || 'Product';
-                    const imeta  = document.createElement('div'); imeta.className = 'order-meta';
-                    imeta.textContent = 'Qty: ' + item.quantity + '  ·  £' + Number(item.unit_price || 0).toFixed(2) + ' each';
-                    iname.appendChild(ititle); iname.appendChild(imeta);
-                    row.appendChild(iname);
-                    itemsWrap.appendChild(row);
-                });
-            } else {
-                itemsWrap.innerHTML = '<p class="muted" style="font-size:13px">No item details available.</p>';
-            }
-
-            const actions = document.createElement('div'); actions.className = 'order-actions';
-            if (o.status === 'shipped' || o.status === 'paid') {
-                const ret = document.createElement('button'); ret.className = 'btn-return'; ret.textContent = 'Request Return';
-                ret.addEventListener('click', () => {
-                    location.href = 'returns.html?order=' + encodeURIComponent(o.id);
-                });
-                actions.appendChild(ret);
-            }
-
-            card.appendChild(head); card.appendChild(meta); card.appendChild(itemsWrap); card.appendChild(actions);
-            ordersWrap.appendChild(card);
+  if (serviceDeleteBtn) {
+    serviceDeleteBtn.addEventListener('click', async () => {
+      if (!existingServiceReview || !existingServiceReview.id) return;
+      if (!confirm('Delete your service review?')) return;
+      serviceDeleteBtn.disabled = true;
+      setServiceMessage('Deleting service review...', true);
+      try {
+        const res = await fetch(apiUrl(`/api/service-reviews/${existingServiceReview.id}`), {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: getHeaders(),
         });
-    }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Unable to delete service review.');
+        existingServiceReview = null;
+        serviceRatingEl.value = '5';
+        serviceCommentEl.value = '';
+        serviceDeleteBtn.style.display = 'none';
+        setServiceMessage('Service review deleted.', true);
+      } catch (e) {
+        setServiceMessage(e.message, false);
+      } finally {
+        serviceDeleteBtn.disabled = false;
+      }
+    });
+  }
 
-    async function loadOrders() {
-        ordersWrap.innerHTML = '<p class="muted">Loading orders...</p>';
-        try {
-            const res = await fetch('/api/orders', {
-                credentials: 'include',
-                headers: { 'X-CSRF-TOKEN': getCsrfToken() },
-            });
-            if (!res.ok) throw new Error('fetch failed');
-            const data = await res.json();
-            // Laravel paginator returns { data: [...] }
-            const orders = Array.isArray(data) ? data : (data.data || []);
-            renderOrders(orders);
-        } catch (e) {
-            ordersWrap.innerHTML = '<p class="muted">Could not load orders. Please try again later.</p>';
-        }
-    }
-
-    // ── Undo snackbar ─────────────────────────────────────────────────────────
-    let __tv_undoTimer = null;
-
-    function showUndoSnackbar(message, onUndo) {
-        let bar = document.getElementById('tv-undo-snackbar');
-        if (!bar) {
-            bar = document.createElement('div'); bar.id = 'tv-undo-snackbar';
-            bar.style.cssText = 'position:fixed;right:20px;bottom:20px;background:#111;color:#fff;padding:10px 12px;border-radius:8px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,0.2)';
-            document.body.appendChild(bar);
-        }
-        bar.innerHTML = '';
-        const msg   = document.createElement('div');    msg.textContent   = message; msg.style.fontSize = '14px';
-        const undo  = document.createElement('button'); undo.textContent  = 'Undo';  undo.className = 'btn-ghost'; undo.style.padding = '6px 10px';
-        const close = document.createElement('button'); close.textContent = '×';     close.className = 'btn-remove'; close.style.padding = '6px 8px';
-        undo.addEventListener('click',  () => { if (onUndo) onUndo(); clearUndoSnackbar(); });
-        close.addEventListener('click', () => clearUndoSnackbar());
-        bar.appendChild(msg); bar.appendChild(undo); bar.appendChild(close);
-        if (__tv_undoTimer) clearTimeout(__tv_undoTimer);
-        __tv_undoTimer = setTimeout(() => clearUndoSnackbar(), 8000);
-    }
-
-    function clearUndoSnackbar() {
-        const b = document.getElementById('tv-undo-snackbar');
-        if (b) b.remove();
-        if (__tv_undoTimer) clearTimeout(__tv_undoTimer);
-        __tv_undoTimer = null;
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────────────
-    renderAccountListings();
-    loadOrders();
-
-
-  // ── GDPR Data Rights ──────────────────────────────────────────────────────
+  // GDPR actions
   const exportBtn = document.getElementById('export-data-btn');
   const deleteBtn = document.getElementById('delete-account-btn');
   const gdprStatus = document.getElementById('gdpr-status');
@@ -332,13 +447,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       exportBtn.disabled = true;
       setGdprStatus('Preparing your data export…', false);
       try {
-        const res = await fetch('/api/gdpr?action=export', {
-          credentials: 'include',
-          headers: { Accept: 'application/json', 'X-CSRF-TOKEN': getHeaders(false)['X-CSRF-TOKEN'] || '' },
-        });
+        const res = await fetch(apiUrl('/api/gdpr?action=export'), { credentials: 'include', headers: getHeaders() });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Export failed.');
-        // Trigger download
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -363,14 +474,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       deleteBtn.disabled = true;
       setGdprStatus('Submitting deletion request…', false);
       try {
-        const res = await fetch('/api/gdpr?action=request-deletion', {
+        const res = await fetch(apiUrl('/api/gdpr?action=request-deletion'), {
           method: 'POST',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-CSRF-TOKEN': getHeaders(false)['X-CSRF-TOKEN'] || '',
-          },
+          headers: getHeaders(true),
           body: JSON.stringify({}),
         });
         const data = await res.json();
@@ -382,4 +489,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  refreshListings();
+  loadOrders();
+  loadServiceReview();
 });

@@ -47,13 +47,13 @@
   function renderCatnav(active) {
     const links = [
       { href: 'customer.html', label: 'All Products' },
-      { href: 'customer.html?cat=laptops', label: 'Laptops' },
-      { href: 'customer.html?cat=gaming-gear', label: 'Gaming' },
-      { href: 'customer.html?cat=headphones', label: 'Audio' },
+      { href: 'customer.html?cat=computers', label: 'Computers' },
+      { href: 'customer.html?cat=gaming', label: 'Gaming' },
+      { href: 'customer.html?cat=audio', label: 'Audio' },
       { href: 'customer.html?cat=accessories', label: 'Accessories' },
       { href: 'customer.html?cat=displays', label: 'Monitors' },
-      { href: 'customer.html?cat=smartphones', label: 'Phones' },
-      { href: 'customer.html?cat=computing', label: 'Computing' },
+      { href: 'customer.html', label: 'Browse All' },
+      { href: 'customer.html?cat=computers', label: 'Computers' },
       { href: 'aboutus.html', label: 'About' },
       { href: 'contact.html', label: 'Contact' },
     ];
@@ -82,7 +82,7 @@
         </div>
         <div class="tv-footer__col">
           <div class="tv-footer__col-title">Shop</div>
-          <ul><li><a href="customer.html">Browse All</a></li><li><a href="customer.html?cat=gaming-gear">Gaming</a></li><li><a href="customer.html?cat=laptops">Laptops</a></li></ul>
+          <ul><li><a href="customer.html">Browse All</a></li><li><a href="customer.html?cat=gaming">Gaming</a></li><li><a href="customer.html?cat=computers">Computers</a></li></ul>
         </div>
       </div>
       <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>

@@ -161,6 +161,7 @@
           <button class="tv-account-nav__link active" data-panel="profile"><i class="fa-solid fa-user"></i> Profile</button>
           <button class="tv-account-nav__link" data-panel="security"><i class="fa-solid fa-lock"></i> Security</button>
           <button class="tv-account-nav__link" data-panel="orders"><i class="fa-solid fa-box"></i> My Orders</button>
+          <button class="tv-account-nav__link" data-panel="service-review"><i class="fa-solid fa-star"></i> Service Review</button>
           <button class="tv-account-nav__link" data-panel="sell"><i class="fa-solid fa-tag"></i> Sell a Product</button>
           <button class="tv-account-nav__link" data-panel="gdpr"><i class="fa-solid fa-shield-halved"></i> My Data (GDPR)</button>
           <button class="tv-account-nav__link tv-account-nav__link--danger" id="signout"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
@@ -214,6 +215,35 @@
             <h3><i class="fa-solid fa-box"></i> My Orders</h3>
             <div id="placed-orders">
               <p class="tv-muted"><i class="fa-solid fa-spinner fa-spin"></i> Loading orders...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service review panel -->
+        <div class="tv-account-panel" id="panel-service-review">
+          <div class="tv-panel-card">
+            <h3><i class="fa-solid fa-star"></i> Review Our Service</h3>
+            <p class="tv-muted" style="margin-bottom:16px;line-height:1.6;">Tell us what you think about the overall Tech Verse shopping experience. This is separate from product reviews and helps us improve the service.</p>
+            <div style="display:flex;flex-direction:column;gap:14px;max-width:640px;">
+              <div class="tv-form-group">
+                <label class="tv-label">Rating</label>
+                <select id="service-rating" class="tv-input">
+                  <option value="5">5 - Excellent</option>
+                  <option value="4">4 - Very Good</option>
+                  <option value="3">3 - Good</option>
+                  <option value="2">2 - Fair</option>
+                  <option value="1">1 - Poor</option>
+                </select>
+              </div>
+              <div class="tv-form-group">
+                <label class="tv-label">Comment</label>
+                <textarea id="service-comment" class="tv-input" rows="5" placeholder="Share your experience with delivery, support, checkout or the overall service..."></textarea>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <button id="save-service-review" class="tv-btn tv-btn--blue"><i class="fa-solid fa-paper-plane"></i> Save Service Review</button>
+                <button id="delete-service-review" class="tv-btn tv-btn--ghost" type="button" style="display:none;"><i class="fa-solid fa-trash"></i> Delete My Review</button>
+              </div>
+              <div id="service-review-status" class="tv-muted" style="font-size:13px;"></div>
             </div>
           </div>
         </div>
