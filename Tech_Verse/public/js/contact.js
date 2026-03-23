@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('form.contact-form');
+  const form = document.getElementById('contact-form');
   if (!form) return;
 
   const nameInput = document.getElementById('contact-name');
@@ -30,10 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     form.appendChild(statusEl);
   }
 
-  // Pre-fill from server session if signed in
   async function prefillFromSession() {
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(`${apiBase()}/api/auth/me`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
       });
@@ -84,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(data.error || data.message || 'Unable to send message.');
 
       form.reset();
-      // Re-prefill after reset
       prefillFromSession();
       statusEl.style.color = '#1f6a2e';
       statusEl.textContent = 'Thanks — your message has been sent to the admin inbox.';
