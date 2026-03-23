@@ -244,10 +244,22 @@
       let allProducts = [];
       let currentFilter = { category: 'all', search: '', minPrice: '', maxPrice: '', minRating: '0', sortBy: 'latest' };
 
+      function normaliseCategorySlug(cat) {
+        const v = String(cat || '').trim().toLowerCase();
+        const aliases = {
+          laptops: 'computers',
+          computing: 'computers',
+          'gaming-gear': 'gaming',
+          headphones: 'audio',
+          smartphones: 'all'
+        };
+        return aliases[v] || v || 'all';
+      }
+
       // Read URL params
       const params = new URLSearchParams(location.search);
       if (params.get('search')) { currentFilter.search = params.get('search'); if (searchInput) searchInput.value = currentFilter.search; }
-      if (params.get('cat')) { currentFilter.category = params.get('cat'); }
+      if (params.get('cat')) { currentFilter.category = normaliseCategorySlug(params.get('cat')); }
 
       function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
       function fmt(v) {
@@ -302,7 +314,8 @@
       function applyFilters() {
         let list = allProducts.slice();
         if (currentFilter.category && currentFilter.category !== 'all') {
-          list = list.filter(p => (p.categorySlug || (p.category || '').toLowerCase()) === currentFilter.category.toLowerCase());
+          const wanted = normaliseCategorySlug(currentFilter.category);
+          list = list.filter(p => normaliseCategorySlug(p.categorySlug || (p.category || '').toLowerCase()) === wanted);
         }
         if (currentFilter.search) {
           const q = currentFilter.search.toLowerCase();
@@ -335,7 +348,7 @@
         ].join('');
         categoriesEl.querySelectorAll('.tv-chip').forEach(btn => {
           btn.addEventListener('click', () => {
-            currentFilter.category = btn.dataset.cat;
+            currentFilter.category = normaliseCategorySlug(btn.dataset.cat);
             if (bcLabel) bcLabel.textContent = btn.dataset.cat === 'all' ? 'All Products' : btn.textContent;
             renderCategories();
             applyFilters();
