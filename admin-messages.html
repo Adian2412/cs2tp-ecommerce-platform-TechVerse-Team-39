@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Contact Messages — Tech Verse Admin</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+
+</head>
+<body>
+  <!-- Admin nav -->
+  <div class="tv-admin-topnav">
+    <div class="tv-admin-topnav__inner">
+      <a href="index.html" class="tv-admin-topnav__logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse"></a>
+      <span class="tv-admin-badge">Admin</span>
+      <nav class="tv-admin-topnav__nav">
+        <a href="admin.html" class="tv-catnav__link">Dashboard</a>
+        <a href="admin-products.html" class="tv-catnav__link">Products</a>
+        <a href="admin-returns.html" class="tv-catnav__link">Returns</a>
+        <a href="admin-reviews.html" class="tv-catnav__link">Reviews</a>
+        <a href="admin-messages.html" class="tv-catnav__link active">Messages</a>
+      </nav>
+      <div class="tv-admin-topnav__actions">
+        <a href="customer.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);">View Shop</a>
+        <button id="signout" class="tv-btn tv-btn--sm" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);">Sign Out</button>
+      </div>
+    </div>
+  </div>
+  <div class="tv-admin-page">
+    <div id="messages-auth-status" style="display:none;"></div>
+    <div id="messages-admin-content">
+    <h1 class="tv-page-title" style="margin-bottom:20px;">Contact Messages</h1>
+
+    <div class="tv-admin-card">
+      <h3><i class="fa-solid fa-envelope"></i> Customer Messages</h3>
+      <input id="message-search" class="tv-input" type="text" placeholder="Search messages..." style="max-width:260px;margin-bottom:14px;">
+      <div style="overflow-x:auto;">
+        <table class="tv-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Subject</th><th>Message</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="messages-table-body">
+            <tr><td colspan="6" class="tv-muted" style="text-align:center;padding:32px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading messages...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  </div>
+  <script src="js/auth.js"></script>
+  <script src="js/cookie-consent.js"></script>
+  <script src="js/admin-messages.js"></script>
+</body>
+</html>

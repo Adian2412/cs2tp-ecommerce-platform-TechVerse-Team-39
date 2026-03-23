@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Return Requests — Tech Verse Admin</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+
+</head>
+<body>
+  <!-- Admin nav -->
+  <div class="tv-admin-topnav">
+    <div class="tv-admin-topnav__inner">
+      <a href="index.html" class="tv-admin-topnav__logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse"></a>
+      <span class="tv-admin-badge">Admin</span>
+      <nav class="tv-admin-topnav__nav">
+        <a href="admin.html" class="tv-catnav__link">Dashboard</a>
+        <a href="admin-products.html" class="tv-catnav__link">Products</a>
+        <a href="admin-returns.html" class="tv-catnav__link active">Returns</a>
+        <a href="admin-reviews.html" class="tv-catnav__link">Reviews</a>
+        <a href="admin-messages.html" class="tv-catnav__link">Messages</a>
+      </nav>
+      <div class="tv-admin-topnav__actions">
+        <a href="customer.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);">View Shop</a>
+        <button id="signout" class="tv-btn tv-btn--sm" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);">Sign Out</button>
+      </div>
+    </div>
+  </div>
+  <div class="tv-admin-page">
+    <div id="returns-auth-status" style="display:none;"></div>
+    <div id="returns-admin-content">
+    <h1 class="tv-page-title" style="margin-bottom:20px;">Return Requests</h1>
+
+    <div class="tv-admin-card">
+      <h3><i class="fa-solid fa-rotate-left"></i> Return Requests</h3>
+      <select id="return-filter" class="tv-input" style="max-width:180px;margin-bottom:14px;"><option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="refunded">Refunded</option></select>
+      <div style="overflow-x:auto;">
+        <table class="tv-table">
+          <thead>
+            <tr><th>Return ID</th><th>Order Item</th><th>Customer</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="returns-table-body">
+            <tr><td colspan="6" class="tv-muted" style="text-align:center;padding:32px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading returns...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  </div>
+  <script src="js/auth.js"></script>
+  <script src="js/cookie-consent.js"></script>
+  <script src="js/admin-returns.js"></script>
+</body>
+</html>
