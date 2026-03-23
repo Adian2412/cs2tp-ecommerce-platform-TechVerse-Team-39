@@ -18,18 +18,36 @@ function guessCountryFromLocale() {
 }
 
 function renderFlag(el, countryCode) {
-    const cc    = (countryCode || '').toLowerCase();
-    const emoji = countryCodeToEmoji(countryCode) || '🌐';
-    if (cc && cc.length === 2) {
-        const src    = `https://flagcdn.com/${cc}.svg`;
-        el.innerHTML = `<span class="country-flag"><img src="${src}" alt="${cc.toUpperCase()} flag" width="20" height="14" loading="lazy"> ${cc.toUpperCase()}</span>`;
-        const img    = el.querySelector('img');
-        if (img) img.addEventListener('error', () => {
-            el.innerHTML = `<span class="country-flag">${emoji} ${countryCode || ''}</span>`;
+    // Strictly validate: must be exactly 2 ASCII alpha characters
+    const cc = /^[A-Za-z]{2}$/.test(countryCode || '') ? countryCode.toUpperCase() : '';
+    const ccLower = cc.toLowerCase();
+    const emoji = (cc ? countryCodeToEmoji(cc) : null) || '🌐';
+
+    // Clear element safely
+    while (el.firstChild) el.removeChild(el.firstChild);
+
+    const span = document.createElement('span');
+    span.className = 'country-flag';
+
+    if (cc) {
+        const img = document.createElement('img');
+        img.src = 'https://flagcdn.com/' + ccLower + '.svg';
+        img.alt = cc + ' flag';
+        img.width = 20;
+        img.height = 14;
+        img.loading = 'lazy';
+        img.addEventListener('error', function () {
+            // Fallback to emoji on image load failure
+            while (span.firstChild) span.removeChild(span.firstChild);
+            span.appendChild(document.createTextNode(emoji + ' ' + cc));
         });
+        span.appendChild(img);
+        span.appendChild(document.createTextNode(' ' + cc));
     } else {
-        el.innerHTML = `<span class="country-flag">${emoji}</span>`;
+        span.appendChild(document.createTextNode(emoji));
     }
+
+    el.appendChild(span);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

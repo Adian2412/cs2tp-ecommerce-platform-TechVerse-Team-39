@@ -4,36 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\Basket;
 use App\Models\BasketItem;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
+    protected function resolveUserId(Request $request): ?int
+    {
+        if (Auth::check()) return (int) Auth::id();
+        $id = $request->session()->get('auth_user_id');
+        return $id ? (int) $id : null;
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->session()->get('auth_user_id');
+        $userId = $this->resolveUserId($request);
+        if (!$userId) {
+            return response()->json(['error' => 'Authentication required'], 401);
+        }
 
         $basket = Basket::firstOrCreate(['user_id' => $userId]);
-
-        // Eager load variant -> product and stock so frontend gets name, price, image
         $basket->load('items.variant.product', 'items.variant.stock');
 
         $items = $basket->items->map(function ($item) {
             $variant = $item->variant;
-            $product = $variant ? $variant->product : null;
-            $stock   = $variant ? $variant->stock   : null;
+            $product = $variant?->product;
+            $stock   = $variant?->stock;
 
             return [
-                'id'               => $item->id,
-                'variant_id'       => $item->product_variant_id,
-                'quantity'         => $item->quantity,
-                'unit_price'       => $variant ? $variant->price        : null,
-                'variant_label'    => $variant ? $variant->variant_label : null,
-                'sku'              => $variant ? $variant->sku           : null,
-                'product_id'       => $product ? $product->id           : null,
-                'name'             => $product ? $product->name         : null,
-                'image_url'        => $product ? $product->image_url    : null,
-                'stock_qty'        => $stock   ? $stock->quantity       : ($variant ? $variant->stock_qty : null),
+                'id'            => $item->id,
+                'variant_id'    => $item->product_variant_id,
+                'quantity'      => $item->quantity,
+                'unit_price'    => $variant?->price,
+                'variant_label' => $variant?->variant_label,
+                'sku'           => $variant?->sku,
+                'product_id'    => $product?->id,
+                'name'          => $product?->name,
+                'image_url'     => $product?->image_url,
+                'stock_qty'     => $stock?->quantity ?? $variant?->stock_qty ?? 0,
             ];
         });
 
@@ -42,12 +52,16 @@ class CartController extends Controller
 
     public function update(Request $request): JsonResponse
     {
+        $userId = $this->resolveUserId($request);
+        if (!$userId) {
+            return response()->json(['error' => 'Authentication required'], 401);
+        }
+
         $validated = $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity'   => ['required', 'integer', 'min:0'],
         ]);
 
-        $userId = $request->session()->get('auth_user_id');
         $basket = Basket::firstOrCreate(['user_id' => $userId]);
 
         if ($validated['quantity'] === 0) {
@@ -56,10 +70,7 @@ class CartController extends Controller
                 ->delete();
         } else {
             BasketItem::updateOrCreate(
-                [
-                    'basket_id'          => $basket->id,
-                    'product_variant_id' => $validated['variant_id'],
-                ],
+                ['basket_id' => $basket->id, 'product_variant_id' => $validated['variant_id']],
                 ['quantity' => $validated['quantity']]
             );
         }

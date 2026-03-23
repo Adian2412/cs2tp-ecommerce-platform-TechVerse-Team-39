@@ -315,4 +315,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAccountListings();
     loadOrders();
 
+
+  // ── GDPR Data Rights ──────────────────────────────────────────────────────
+  const exportBtn = document.getElementById('export-data-btn');
+  const deleteBtn = document.getElementById('delete-account-btn');
+  const gdprStatus = document.getElementById('gdpr-status');
+
+  function setGdprStatus(msg, isError) {
+    if (!gdprStatus) return;
+    gdprStatus.textContent = msg;
+    gdprStatus.style.color = isError ? '#b42318' : '#1f6a2e';
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async () => {
+      exportBtn.disabled = true;
+      setGdprStatus('Preparing your data export…', false);
+      try {
+        const res = await fetch('/api/gdpr?action=export', {
+          credentials: 'include',
+          headers: { Accept: 'application/json', 'X-CSRF-TOKEN': getHeaders(false)['X-CSRF-TOKEN'] || '' },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Export failed.');
+        // Trigger download
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'techverse-my-data.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setGdprStatus('Your data has been downloaded.', false);
+      } catch (err) {
+        setGdprStatus(err.message, true);
+      } finally {
+        exportBtn.disabled = false;
+      }
+    });
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to request deletion of your account and all personal data? This cannot be undone.')) return;
+      deleteBtn.disabled = true;
+      setGdprStatus('Submitting deletion request…', false);
+      try {
+        const res = await fetch('/api/gdpr?action=request-deletion', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': getHeaders(false)['X-CSRF-TOKEN'] || '',
+          },
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Deletion request failed.');
+        setGdprStatus('Your deletion request has been submitted. We will process it within 30 days.', false);
+      } catch (err) {
+        deleteBtn.disabled = false;
+        setGdprStatus(err.message, true);
+      }
+    });
+  }
 });

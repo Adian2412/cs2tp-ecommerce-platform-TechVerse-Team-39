@@ -1,114 +1,141 @@
-
 document.addEventListener('DOMContentLoaded', () => {
-    const form           = document.getElementById('register-form');
-    const first          = document.getElementById('reg-first');
-    const last           = document.getElementById('reg-last');
-    const email          = document.getElementById('reg-email');
-    const password       = document.getElementById('reg-password');
-    const msg            = document.getElementById('register-msg');
-    const privacyConsent = document.getElementById('privacy-consent');
-    const captchaBox     = document.getElementById('captcha-box');
+  const API_BASE = (() => {
+    try {
+      const meta = document.querySelector('meta[name="tv-api-base"]');
+      const raw = ((meta && meta.content) || '').trim();
+      return raw ? raw.replace(/\/+$/, '') + '/api' : '/api';
+    } catch (e) { return '/api'; }
+  })();
 
-    function getCsrfToken() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
+  const form = document.getElementById('register-form');
+  if (!form) return;
+
+  const msgEl        = document.getElementById('register-msg');
+  const firstEl      = document.getElementById('reg-first');
+  const lastEl       = document.getElementById('reg-last');
+  const emailEl      = document.getElementById('reg-email');
+  const passwordEl   = document.getElementById('reg-password');
+  const roleEl       = document.getElementById('reg-role');
+  const adminCodeEl  = document.getElementById('reg-admin-code');
+  const captchaEl    = document.getElementById('captcha-box');
+  const privacyEl    = document.getElementById('privacy-consent'); // only on create.html
+  const strengthText = document.getElementById('pw-strength-text');
+  const strengthBar  = document.getElementById('pw-strength-bar');
+
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+  }
+
+  function setMessage(text, ok = false) {
+    msgEl.textContent = text || '';
+    msgEl.style.color = ok ? '#0a0' : '#d00';
+  }
+
+  function storeAuth(data, resp) {
+    if (data && data.user) localStorage.setItem('techverse_auth_user', JSON.stringify(data.user));
+    const sessionToken = (data && data.session_token) || resp.headers.get('X-Session-Token');
+    if (sessionToken) localStorage.setItem('techverse_session_token', sessionToken);
+  }
+
+  function passwordStrength(password) {
+    let score = 0;
+    if (password.length >= 8)          score++;
+    if (/[A-Z]/.test(password))        score++;
+    if (/[a-z]/.test(password))        score++;
+    if (/\d/.test(password))           score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  }
+
+  function updateStrength() {
+    if (!passwordEl || !strengthBar || !strengthText) return;
+    const password = passwordEl.value || '';
+    const score = passwordStrength(password);
+    const pct = Math.min(score * 20, 100);
+    strengthBar.style.width = pct + '%';
+
+    if (score <= 1) {
+      strengthBar.style.background = '#d00';
+      strengthText.textContent = password ? 'Password strength: weak' : '';
+      strengthText.style.color = '#d00';
+    } else if (score <= 3) {
+      strengthBar.style.background = '#d48b00';
+      strengthText.textContent = 'Password strength: medium';
+      strengthText.style.color = '#d48b00';
+    } else {
+      strengthBar.style.background = '#0a8f3d';
+      strengthText.textContent = 'Password strength: strong';
+      strengthText.style.color = '#0a8f3d';
+    }
+  }
+
+  if (passwordEl) passwordEl.addEventListener('input', updateStrength);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const first     = (firstEl?.value    || '').trim();
+    const last      = (lastEl?.value     || '').trim();
+    const email     = (emailEl?.value    || '').trim();
+    const password  = passwordEl?.value  || '';
+    const role      = (roleEl?.value     || 'customer').trim();
+    const adminCode = (adminCodeEl?.value|| '').trim();
+    const username  = [first, last].filter(Boolean).join(' ').trim();
+
+    if (!username) {
+      setMessage('Please enter your first name and surname.');
+      return;
     }
 
-    function showMsg(text, isError = true) {
-        msg.textContent = text;
-        msg.style.color = isError ? '#d00' : 'green';
+    // Privacy consent — only required if the checkbox exists (create.html)
+    if (privacyEl && !privacyEl.checked) {
+      setMessage('Please read and accept the Privacy Policy to continue.');
+      return;
     }
 
-    // ── Password strength meter ───────────────────────────────────────────────
-    const strengthText = document.getElementById('pw-strength-text');
-    const strengthBar  = document.getElementById('pw-strength-bar');
+    if (!captchaEl || !captchaEl.checked) {
+      setMessage('Please confirm the captcha checkbox.');
+      return;
+    }
 
-    password.addEventListener('input', () => {
-        const v = password.value;
-        let score = 0;
-        if (v.length >= 8)           score++;
-        if (/[A-Z]/.test(v))         score++;
-        if (/[0-9]/.test(v))         score++;
-        if (/[^A-Za-z0-9]/.test(v))  score++;
+    if (password.length < 8) {
+      setMessage('Password must be at least 8 characters long.');
+      return;
+    }
 
-        const levels = [
-            { label: '',       width: '0',    color: 'transparent' },
-            { label: 'Weak',   width: '25%',  color: '#e53e3e' },
-            { label: 'Fair',   width: '50%',  color: '#dd6b20' },
-            { label: 'Good',   width: '75%',  color: '#d69e2e' },
-            { label: 'Strong', width: '100%', color: '#38a169' },
-        ];
-        const level = levels[score] || levels[0];
-        strengthText.textContent     = level.label;
-        strengthBar.style.width      = level.width;
-        strengthBar.style.background = level.color;
-    });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMessage('Please enter a valid email address.');
+      return;
+    }
 
-    // ── Form submission ───────────────────────────────────────────────────────
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        showMsg('');
+    setMessage('');
 
-        if (privacyConsent && !privacyConsent.checked) {
-            showMsg('Please read and accept the Privacy Policy to continue.');
-            return;
-        }
-        if (captchaBox && !captchaBox.checked) {
-            showMsg('Please complete the CAPTCHA.');
-            return;
-        }
+    try {
+      const resp = await fetch(`${API_BASE}/register`, {
+        method: 'POST', credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          role,
+          admin_code: adminCode || undefined,
+        }),
+      });
 
-        const firstName = first.value.trim();
-        const lastName  = last.value.trim();
-        const emailVal  = email.value.trim();
-        const passVal   = password.value;
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.error || data.message || 'Registration failed.');
 
-        if (!firstName || !emailVal || !passVal) {
-            showMsg('Please fill in all required fields.');
-            return;
-        }
-        if (passVal.length < 8) {
-            showMsg('Password must be at least 8 characters.');
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-            showMsg('Please enter a valid email address.');
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/auth/register', {
-                method:      'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    name:     `${firstName} ${lastName}`.trim(),
-                    email:    emailVal,
-                    password: passVal,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                // Laravel validation errors come back as data.errors object
-                if (data.errors) {
-                    const firstErr = Object.values(data.errors)[0];
-                    showMsg(Array.isArray(firstErr) ? firstErr[0] : firstErr);
-                } else {
-                    showMsg(data.message || data.error || 'Registration failed.');
-                }
-                return;
-            }
-
-            showMsg('Account created! Redirecting to sign in...', false);
-            setTimeout(() => { window.location.href = 'signin.html'; }, 1500);
-
-        } catch (err) {
-            showMsg('Network error. Please try again.');
-        }
-    });
+      storeAuth(data, resp);
+      setMessage('Registration successful! Redirecting...', true);
+      setTimeout(() => { location.href = 'index.html'; }, 700);
+    } catch (error) {
+      setMessage(error.message || 'Network error while creating account.');
+    }
+  });
 });

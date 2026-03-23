@@ -1,50 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-    <title>Tech Verse</title>
-    <link rel="stylesheet" href="css/signin.css">
-    <!-- TODO: When backend is available, a CSRF token meta tag will be injected by server -->
-    <meta name="csrf-token" content="">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Sign In — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; background: var(--tv-bg); }
+    .tv-auth-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .tv-auth-card {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-xl);
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--tv-shadow-lg);
+    }
+    .tv-auth-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .tv-auth-logo a {
+      font-family: var(--tv-font-head);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--tv-navy);
+      text-decoration: none;
+    }
+    .tv-auth-logo a span { color: var(--tv-primary); }
+    .tv-auth-title {
+      font-family: var(--tv-font-head);
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .tv-auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .tv-auth-form label { font-size: 13px; font-weight: 600; color: var(--tv-text-2); margin-bottom: 4px; display: block; }
+    .tv-divider-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--tv-text-3);
+      margin: 4px 0;
+    }
+    .tv-divider-text::before, .tv-divider-text::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--tv-border);
+    }
+  </style>
 </head>
 <body>
 
-     <div class="backBut">
-        <input type="button" value="back" onclick="history.back()">
+  <!-- Minimal header -->
+  <div style="background: var(--tv-navy-mid); padding: 12px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+    <a href="index.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="tv-auth-wrap">
+    <div class="tv-auth-card">
+      <div class="tv-auth-title">Sign in to Tech Verse</div>
+
+      <form id="login-form" class="tv-auth-form">
+        <div class="tv-form-group">
+          <label for="login-email"><i class="fa-regular fa-envelope" style="margin-right:4px;color:var(--tv-primary)"></i>Email address</label>
+          <input id="login-email" class="tv-input" type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+
+        <div class="tv-form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label for="login-password" style="margin-bottom:0;"><i class="fa-solid fa-lock" style="margin-right:4px;color:var(--tv-primary)"></i>Password</label>
+            <a href="#" style="font-size:12px;color:var(--tv-primary);">Forgot password?</a>
+          </div>
+          <input id="login-password" class="tv-input" type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div id="login-msg" style="font-size:13px;color:var(--tv-danger);text-align:center;min-height:18px;"></div>
+
+        <button type="submit" class="tv-btn tv-btn--primary tv-btn--full tv-btn--lg">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </button>
+      </form>
+
+      <div class="tv-divider-text" style="margin:20px 0;">New to Tech Verse?</div>
+
+      <a href="register.html" class="tv-btn tv-btn--ghost tv-btn--full tv-btn--lg">
+        <i class="fa-solid fa-user-plus"></i> Create an account
+      </a>
+
+      <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--tv-text-3);">
+        By signing in you agree to our <a href="privacy.html" style="color:var(--tv-primary);">Privacy Policy</a>
+      </p>
     </div>
+  </div>
 
-    <div class="logo">
-    <h1>Tech Verse</h1>
-    </div>
-
-    <div class="wrapper">
-        <form id="login-form" action="" method="post">
-            <h1>Sign into your account</h1>
-
-            <div class="register_link">
-                <p>New to Tech Verse?<a href="register.html">Register</a></p>
-            </div>
-
-            <div class="input_box">
-                <input id="login-email" name="email" type="email" placeholder="Email" required>
-            </div>
-            <div class="input_box">
-                <input id="login-password" name="password" type="password" placeholder="Password" required>
-            </div>
-
-            <div class="remember_forgot">
-                <label><input type="checkbox">remember me</label>
-                <a href="#">Forgot Password?</a>
-            </div>
-
-            <button type="submit" class="button">Login</button>
-            <div id="login-msg" style="margin-top:8px;color:#d00"></div>
-
-
-        </form>
-    </div>
-    <script src="signin.js"></script>
+  <script src="javascript/signin.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
 </body>
 </html>

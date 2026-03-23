@@ -1,91 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-    <title>Tech Verse</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Tech Verse — Technology for Everyone</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    .tv-cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .tv-cat-card {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius);
+      padding: 20px 12px 16px;
+      text-align: center;
+      transition: all var(--tv-transition);
+      text-decoration: none;
+      color: var(--tv-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .tv-cat-card:hover { border-color: var(--tv-primary); box-shadow: var(--tv-shadow); transform: translateY(-2px); }
+    .tv-cat-card i { font-size: 28px; color: var(--tv-primary); }
+    .tv-cat-card span { font-size: 13px; font-weight: 600; font-family: var(--tv-font-head); }
+
+    .tv-banner {
+      background: linear-gradient(135deg, #0f1111 0%, #1a3a5c 60%, #0d3b6e 100%);
+      color: #fff;
+      padding: 48px 40px;
+      border-radius: var(--tv-radius-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    .tv-banner::after {
+      content: '';
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(254,189,105,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .tv-banner__content { position: relative; z-index: 1; max-width: 560px; }
+    .tv-banner__tag {
+      display: inline-block;
+      background: var(--tv-yellow);
+      color: var(--tv-navy);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .tv-banner__title {
+      font-family: var(--tv-font-head);
+      font-size: clamp(26px, 4vw, 44px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .tv-banner__title em { font-style: normal; color: var(--tv-yellow); }
+    .tv-banner__sub { font-size: 15px; color: #aaa; margin-bottom: 24px; line-height: 1.6; }
+    .tv-banner__actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .tv-promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .tv-promo {
+      border-radius: var(--tv-radius-lg);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 150px;
+      justify-content: flex-end;
+      text-decoration: none;
+      color: #fff;
+      transition: transform var(--tv-transition), box-shadow var(--tv-transition);
+    }
+    .tv-promo:hover { transform: translateY(-2px); box-shadow: var(--tv-shadow-lg); }
+    .tv-promo--blue { background: linear-gradient(135deg, #0d3b6e, #0d6efd); }
+    .tv-promo--dark { background: linear-gradient(135deg, #1a1a2e, #3d2b6e); }
+    .tv-promo__tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tv-yellow); }
+    .tv-promo__title { font-family: var(--tv-font-head); font-size: 19px; font-weight: 700; line-height: 1.2; }
+    .tv-promo__link { font-size: 13px; color: var(--tv-yellow); display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+
+    @media (max-width: 600px) {
+      .tv-promo-grid { grid-template-columns: 1fr; }
+      .tv-cat-grid { grid-template-columns: repeat(4, 1fr); }
+      .tv-banner { padding: 28px 20px; }
+    }
+  </style>
 </head>
-<body style="position:relative;">
+<body>
 
-    <!-- Background logo -->
-    <div aria-hidden="true"
-         style="position:fixed; inset:0; display:flex; justify-content:center; align-items:center; pointer-events:none; z-index:0; overflow:hidden;">
-        <img src="images/techverse-logo.png"
-             alt=""
-             style="width:min(78vw, 950px); height:auto; object-fit:contain; opacity:0.12; transform:rotate(-8deg);">
+  <!-- Top bar -->
+  <div class="tv-topbar">
+    <div class="tv-topbar__inner">
+      <div class="tv-topbar__flag" id="flag"><i class="fa-solid fa-globe"></i></div>
+      <div class="tv-topbar__links">
+        <a href="support.html"><i class="fa-solid fa-headset"></i> 24/7 Support</a>
+        <a href="delivery.html"><i class="fa-solid fa-truck"></i> Free delivery over £50</a>
+        <a href="returns-info.html"><i class="fa-solid fa-rotate-left"></i> 30-day returns</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="tv-nav">
+    <div class="tv-nav__inner">
+      <a href="index.html" class="tv-logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:42px;width:auto;object-fit:contain;"></a>
+      <form class="tv-search" onsubmit="event.preventDefault();location.href='customer.html?search='+encodeURIComponent(this.querySelector('input').value)">
+        <input class="tv-search__input" type="text" placeholder="Search for products, brands and more...">
+        <button class="tv-search__btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="tv-nav__actions">
+        <a href="account.html" class="tv-nav__action"><i class="fa-regular fa-user"></i><span>Account</span></a>
+        <a href="liked.html" class="tv-nav__action"><i class="fa-regular fa-heart"></i><span>Saved</span></a>
+        <a href="cart.html" class="tv-nav__action">
+          <div class="tv-cart-badge"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="tv-cart-count" style="display:none"></span></div>
+          <strong>Cart</strong>
+        </a>
+        <button id="signin" class="tv-btn tv-btn--primary tv-btn--sm" onclick="location.href='signin.html'">Sign In</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Category nav -->
+  <div class="tv-catnav">
+    <div class="tv-catnav__inner">
+      <a href="customer.html" class="tv-catnav__link">All Products</a>
+      <a href="customer.html?cat=laptops" class="tv-catnav__link">Laptops</a>
+      <a href="customer.html?cat=gaming-gear" class="tv-catnav__link">Gaming</a>
+      <a href="customer.html?cat=headphones" class="tv-catnav__link">Audio</a>
+      <a href="customer.html?cat=accessories" class="tv-catnav__link">Accessories</a>
+      <a href="customer.html?cat=displays" class="tv-catnav__link">Monitors</a>
+      <a href="customer.html?cat=smartphones" class="tv-catnav__link">Phones</a>
+      <a href="customer.html?cat=computing" class="tv-catnav__link">Computing</a>
+      <a href="aboutus.html" class="tv-catnav__link">About</a>
+      <a href="contact.html" class="tv-catnav__link">Contact</a>
+      <a href="admin.html" class="tv-catnav__link" id="nav-admin" style="display:none;color:var(--tv-yellow)">Admin ★</a>
+    </div>
+  </div>
+
+  <!-- Page -->
+  <div style="background:var(--tv-bg); min-height:80vh;">
+    <div class="tv-page">
+
+      <!-- Hero -->
+      <div class="tv-banner" style="margin-bottom:24px;">
+        <div class="tv-banner__content">
+          <div class="tv-banner__tag">🚀 New Arrivals 2026</div>
+          <div class="tv-banner__title">Technology for<br><em>Every Lifestyle</em></div>
+          <div class="tv-banner__sub">Laptops, gaming gear, audio and more — trusted brands, great prices.</div>
+          <div class="tv-banner__actions">
+            <a href="customer.html" class="tv-btn tv-btn--primary tv-btn--lg">Shop Now</a>
+            <a href="customer.html?cat=gaming-gear" class="tv-btn tv-btn--lg" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);">Gaming Deals</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature strip -->
+      <div class="tv-features" style="border-radius:var(--tv-radius);margin-bottom:28px;border:1px solid var(--tv-border);">
+        <div class="tv-features__inner">
+          <a href="delivery.html" class="tv-feature">
+            <div class="tv-feature__icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <div class="tv-feature__text"><strong>Free Delivery</strong><span>Orders over £50</span></div>
+          </a>
+          <a href="returns-info.html" class="tv-feature">
+            <div class="tv-feature__icon"><i class="fa-solid fa-rotate-left"></i></div>
+            <div class="tv-feature__text"><strong>30-Day Returns</strong><span>Hassle-free</span></div>
+          </a>
+          <a href="payments.html" class="tv-feature">
+            <div class="tv-feature__icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="tv-feature__text"><strong>Secure Payments</strong><span>SSL encrypted</span></div>
+          </a>
+          <a href="support.html" class="tv-feature">
+            <div class="tv-feature__icon"><i class="fa-solid fa-headset"></i></div>
+            <div class="tv-feature__text"><strong>24/7 Support</strong><span>Always here</span></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <section style="margin-bottom:32px;">
+        <div class="tv-section-head">
+          <h2>Shop by Category</h2>
+          <a href="customer.html">View all <i class="fa-solid fa-chevron-right" style="font-size:10px"></i></a>
+        </div>
+        <div class="tv-cat-grid">
+          <a href="customer.html?cat=laptops" class="tv-cat-card"><i class="fa-solid fa-laptop"></i><span>Laptops</span></a>
+          <a href="customer.html?cat=gaming-gear" class="tv-cat-card"><i class="fa-solid fa-gamepad"></i><span>Gaming</span></a>
+          <a href="customer.html?cat=headphones" class="tv-cat-card"><i class="fa-solid fa-headphones"></i><span>Audio</span></a>
+          <a href="customer.html?cat=displays" class="tv-cat-card"><i class="fa-solid fa-desktop"></i><span>Monitors</span></a>
+          <a href="customer.html?cat=accessories" class="tv-cat-card"><i class="fa-solid fa-keyboard"></i><span>Accessories</span></a>
+          <a href="customer.html?cat=smartphones" class="tv-cat-card"><i class="fa-solid fa-mobile-screen"></i><span>Phones</span></a>
+          <a href="customer.html?cat=computing" class="tv-cat-card"><i class="fa-solid fa-server"></i><span>Computing</span></a>
+          <a href="customer.html" class="tv-cat-card"><i class="fa-solid fa-ellipsis"></i><span>All Items</span></a>
+        </div>
+      </section>
+
+      <!-- Featured products -->
+      <section style="margin-bottom:32px;">
+        <div class="tv-section-head">
+          <h2>Featured Products</h2>
+          <a href="customer.html">See all <i class="fa-solid fa-chevron-right" style="font-size:10px"></i></a>
+        </div>
+        <div id="featured-products" class="tv-grid">
+          <p class="tv-muted" style="grid-column:1/-1;text-align:center;padding:40px 0;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+          </p>
+        </div>
+      </section>
+
+      <!-- Promo cards -->
+      <section style="margin-bottom:32px;">
+        <div class="tv-promo-grid">
+          <a href="customer.html?cat=gaming-gear" class="tv-promo tv-promo--blue">
+            <div class="tv-promo__tag">Hot right now</div>
+            <div class="tv-promo__title">Gaming Gear &amp;<br>Peripherals</div>
+            <div class="tv-promo__link">Shop gaming <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+          <a href="customer.html?cat=laptops" class="tv-promo tv-promo--dark">
+            <div class="tv-promo__tag">Top picks</div>
+            <div class="tv-promo__title">Laptops for<br>Work &amp; Study</div>
+            <div class="tv-promo__link">Browse laptops <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+        </div>
+      </section>
+
     </div>
 
-    <!-- Page content -->
-    <div style="position:relative; z-index:1;">
-
-        <div class="topnav">
-            <nav>
-                <li class="static" id="flag">flag</li>
-                <li class="static" id="phone-number" style="display: none;">phone number</li>
-                <div class="nav-right">
-                    <li id="nav-myaccount" style="display: none;"><a href="account.html">My account</a></li>
-                    <li id="nav-wishlist" style="display: none;"><a href="liked.html">Wish List</a></li>
-                    <script src="geo-flag.js"></script>
-                    <li id="nav-checkout" style="display: none;"><a href="#checkout">Checkout</a></li>
-                </div>
-            </nav>
+    <!-- Footer -->
+    <footer class="tv-footer">
+      <div class="tv-footer__top">
+        <div class="tv-footer__col">
+          <div class="tv-footer__col-title">TechVerse</div>
+          <ul><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul>
         </div>
-
-        <hr>
-
-        <div class="midnav">
-            <div class="logo">
-                <h1>Tech Verse</h1>
-            </div>
-
-            <nav class="left-of_search">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="customer.html">Browse</a></li>
-                <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
-                <li><a href="contact.html">Contact us</a></li>
-                <li><a href="aboutus.html">About us</a></li>
-            </nav>
-
-            <div class="right_of_search">
-                <input type="text" placeholder="Search..🔍">
-                <li id="nav-fav" style="display: none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-                <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-                <li id="nav-user" style="display: none;"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
-                <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
-            </div>
+        <div class="tv-footer__col">
+          <div class="tv-footer__col-title">Customer Service</div>
+          <ul><li><a href="support.html">Help &amp; Support</a></li><li><a href="returns-info.html">Returns</a></li><li><a href="delivery.html">Delivery Info</a></li></ul>
         </div>
+        <div class="tv-footer__col">
+          <div class="tv-footer__col-title">My Account</div>
+          <ul><li><a href="account.html">My Account</a></li><li><a href="cart.html">My Cart</a></li><li><a href="liked.html">Saved Items</a></li></ul>
+        </div>
+        <div class="tv-footer__col">
+          <div class="tv-footer__col-title">Shop</div>
+          <ul><li><a href="customer.html">Browse All</a></li><li><a href="customer.html?cat=gaming-gear">Gaming</a></li><li><a href="customer.html?cat=laptops">Laptops</a></li></ul>
+        </div>
+      </div>
+      <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd · Aston University, Birmingham, UK</div>
+    </footer>
+  </div>
 
-        <main style="min-height:70vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px 20px;">
-            <div style="max-width:760px; margin:0 auto 28px;">
-                <h2 style="font-size:2.2rem; margin-bottom:14px;">Welcome to Tech Verse</h2>
-                <p style="font-size:1.05rem; line-height:1.6;">
-                    Explore a wide range of technology products, from everyday essentials to gaming gear, with secure checkout, simple returns and reliable support.
-                </p>
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/geo-flag.js"></script>
+  <script src="javascript/global-search.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script>
+    (async () => {
+      const API = (document.querySelector('meta[name="tv-api-base"]')?.content || '').replace(/\/+$/, '');
+      const grid = document.getElementById('featured-products');
+      try {
+        const res = await fetch(API + '/api/products?per_page=8', { credentials: 'include' });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const products = Array.isArray(data) ? data : (data.data || []);
+        if (!products.length) throw new Error();
+        const fmt = v => typeof v === 'number' ? '£' + v.toFixed(2) : (v != null ? '£' + parseFloat(v).toFixed(2) : 'N/A');
+        grid.innerHTML = products.slice(0, 8).map(p => {
+          const img = (p.images?.[0]?.image_path) || p.image_url || 'https://dummyimage.com/400x400/f0f0f0/999&text=TechVerse';
+          const price = p.price ?? p.variants?.[0]?.price;
+          const stars = p.avg_rating ? '★'.repeat(Math.round(p.avg_rating)) + '☆'.repeat(5 - Math.round(p.avg_rating)) : '';
+          return `<a href="product_page.html?id=${p.id}" class="tv-product-card" style="text-decoration:none;">
+            <img class="tv-product-card__img" src="${img}" alt="" onerror="this.src='https://dummyimage.com/400x400/f0f0f0/999&text=No+Image'">
+            <div class="tv-product-card__body">
+              <div class="tv-product-card__cat">${p.category?.name || p.category_name || ''}</div>
+              <div class="tv-product-card__name">${p.name || 'Product'}</div>
+              ${stars ? `<div class="tv-product-card__rating"><span class="tv-product-card__stars" style="color:var(--tv-warning)">${stars}</span><span>(${p.reviews_count || 0})</span></div>` : ''}
+              <div class="tv-product-card__price">${fmt(price)}</div>
             </div>
-
-            <div class="top-btn-container" style="margin-bottom:40px;">
-                <a class="top-btn" href="customer.html">Explore now</a>
-            </div>
-
-            <div class="lowernav" style="width:100%; max-width:1000px;">
-                <nav>
-                    <div class="btn-container" role="navigation" aria-label="site highlights">
-                        <a id="box1" class="lower-btn" href="support.html">24/7 Support</a>
-                        <a id="box2" class="lower-btn" href="delivery.html">Reliable Delivery</a>
-                        <a id="box3" class="lower-btn" href="payments.html">Secure Payments</a>
-                        <a id="box4" class="lower-btn" href="returns.html">Simple Returns</a>
-                    </div>
-                </nav>
-            </div>
-        </main>
-
-    </div>
-
-    <script src="cart-badge.js"></script>
-    <script src="auth.js"></script>
-    <script src="global-search.js"></script>
+            <div class="tv-product-card__footer"><div class="tv-product-card__btn">View Product</div></div>
+          </a>`;
+        }).join('');
+      } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px 0;">
+          <p class="tv-muted" style="margin-bottom:16px;">Connect to the backend to see live products.</p>
+          <a href="customer.html" class="tv-btn tv-btn--blue">Browse All Products</a>
+        </div>`;
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -1,211 +1,237 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const wrap        = document.getElementById('listings');
-    const LISTINGS_KEY = 'techverse_listings_v1';
+document.addEventListener('DOMContentLoaded', () => {
+  const listingsEl = document.getElementById('listings');
+  if (!listingsEl) return;
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    function escapeHtml(s) {
-        if (!s) return '';
-        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-    }
+  const searchInput = document.getElementById('search-input');
+  const categoriesEl = document.getElementById('categories');
+  const minPriceEl = document.getElementById('min-price');
+  const maxPriceEl = document.getElementById('max-price');
+  const minRatingEl = document.getElementById('min-rating');
+  const sortByEl = document.getElementById('sort-by');
+  const clearFiltersBtn = document.getElementById('clear-filters');
+  const resultsCountEl = document.getElementById('results-count');
 
-    function fmt(v) {
-        if (window.tvCurrency && typeof window.tvCurrency.formatCurrency === 'function') {
-            return window.tvCurrency.formatCurrency(v);
-        }
-        return '£' + Number(v).toFixed(2);
-    }
+  const API_BASE = typeof getApiBaseUrl === 'function' ? getApiBaseUrl() : '/api';
+  const PRODUCT_CACHE_KEY = 'techverse_listings_v1';
 
-    // ── Fetch from server ─────────────────────────────────────────────────────
-    async function fetchProductsFromServer() {
-        const res = await fetch('/api/products', { credentials: 'include' });
-        if (!res.ok) throw new Error('not ok');
-        const data = await res.json();
-        // Laravel paginator returns { data: [...] } or plain array
-        return Array.isArray(data) ? data : (data.data || []);
-    }
+  let allProducts = [];
+  let currentFilter = { category: 'all', search: '', minPrice: '', maxPrice: '', minRating: '0', sortBy: 'latest' };
 
-    // Normalise a server product into the same shape the render function expects
-    function normaliseServerProduct(p) {
-        return {
-            id:       p.id,
-            title:    p.name,
-            price:    parseFloat(p.price || 0),
-            desc:     p.description || '',
-            images:   p.image_url ? [p.image_url] : [],
-            category: p.category ? (p.category.slug || p.category_id) : null,
-            _source:  'server',
-        };
-    }
+  function formatPrice(v) {
+    if (window.tvCurrency && typeof window.tvCurrency.formatCurrency === 'function') return window.tvCurrency.formatCurrency(v);
+    const num = parseFloat(v);
+    if (!Number.isFinite(num)) return 'Price not available';
+    return '£' + num.toFixed(2);
+  }
 
-    // ── LocalStorage fallback ─────────────────────────────────────────────────
-    function loadLocalListings() {
-        try { return JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]'); } catch (e) { return []; }
-    }
+  function escapeHtml(s) {
+    if (!s && s !== 0) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
-    function seedSampleListings() {
-        if (loadLocalListings().length) return;
-        const sample = [
-            { id: 'p-001', title: 'Wireless Headphones',  price: 59.99,  desc: 'Comfortable wireless headphones with 20h battery.',      images: ['images/headphones.jpg'], category: 'audio' },
-            { id: 'p-002', title: 'Bluetooth Speaker',     price: 39.99,  desc: 'Portable speaker with rich bass.',                       images: ['images/speaker.jpg'],    category: 'audio' },
-            { id: 'p-003', title: 'Mechanical Keyboard',   price: 89.99,  desc: 'RGB mechanical keyboard, tactile switches.',              images: ['images/keyboard.jpg'],   category: 'accessories' },
-            { id: 'p-004', title: 'Smartwatch',            price: 129.99, desc: 'Fitness tracking and notifications on your wrist.',       images: ['images/watch.jpg'],      category: 'wearables' },
-            { id: 'p-005', title: 'USB-C Hub',             price: 24.99,  desc: 'Expand your laptop ports with HDMI and USB-A.',          images: ['images/hub.jpg'],        category: 'accessories' },
-            { id: 'p-006', title: '4K Monitor',            price: 279.99, desc: '27" 4K IPS display with HDR support.',                   images: ['images/monitor.jpg'],    category: 'displays' },
-        ];
-        try { localStorage.setItem(LISTINGS_KEY, JSON.stringify(sample)); } catch (e) {}
-    }
+  function availabilityBadge(product) {
+    if (product.is_sold) return '<span class="tv-badge tv-badge-sold">Sold</span>';
+    if (!product.is_active) return '<span class="tv-badge tv-badge-unavailable">Unavailable</span>';
+    if ((product.stock || 0) <= 0) return '<span class="tv-badge tv-badge-out">Out of stock</span>';
+    if (product.is_low_stock) return `<span class="tv-badge tv-badge-low">Low stock (${product.stock} left)</span>`;
+    return '<span class="tv-badge tv-badge-in">In stock</span>';
+  }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-    let allProducts = [];
+  function ratingSummary(product) {
+    const rating = Number(product.avg_rating || 0);
+    const count = Number(product.reviews_count || 0);
+    if (!count || rating <= 0) return '<div class="rating-line">No ratings yet</div>';
+    const full = Math.round(rating);
+    return `<div class="rating-line">${'★'.repeat(full)}${'☆'.repeat(5 - full)} · ${rating.toFixed(1)}/5 (${count})</div>`;
+  }
 
-    function render(searchTerm) {
-        wrap.innerHTML = '';
-        if (!allProducts.length) {
-            wrap.innerHTML = '<p style="color:#666">No products listed yet.</p>';
-            return;
-        }
+  function injectBadgeStyles() {
+    if (document.getElementById('tv-stock-badge-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'tv-stock-badge-styles';
+    style.textContent = `
+      .tv-badge-wrap { margin: 10px 0 6px; }
+      .tv-badge { display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+      .tv-badge-in { background:#eaf8ee; color:#1d6b37; }
+      .tv-badge-low { background:#fff4df; color:#8a5700; }
+      .tv-badge-out { background:#ffe8e8; color:#a11b1b; }
+      .tv-badge-sold, .tv-badge-unavailable { background:#eef1f4; color:#51606f; }
+      .product-meta { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+      .product-meta-note { font-size:12px; color:#6a7785; }
+    `;
+    document.head.appendChild(style);
+  }
 
-        let filtered = allProducts;
+  function normaliseProducts(rawList) {
+    if (!Array.isArray(rawList)) return [];
+    return rawList.map(p => {
+      const image =
+        (p.images && Array.isArray(p.images) && p.images[0] && p.images[0].image_path) ||
+        p.image_url ||
+        'https://dummyimage.com/600x400/f2f4f7/1c3846&text=Tech+Verse';
+      const categoryName =
+        (p.category && typeof p.category === 'object' ? (p.category.name || p.category.slug || '') : (p.category || '')) ||
+        p.category_name ||
+        (p.categories && p.categories[0]?.name) || '';
+      const categorySlug = (p.category && typeof p.category === 'object' ? (p.category.slug || p.category.name || '') : categoryName).toString().toLowerCase();
+      const stock = Number(p.stock || 0);
+      const threshold = Number(p.low_stock_threshold || 0);
+      const isActive = p.is_active !== false && p.is_active !== 0;
+      const isSold = p.is_sold === true || p.is_sold === 1;
+      const isLowStock = p.is_low_stock === true || p.is_low_stock === 1 || (stock > 0 && threshold > 0 && stock <= threshold);
+      const avgRating = Number(p.avg_rating ?? p.reviews_avg_rating ?? 0) || 0;
+      const reviewsCount = Number(p.reviews_count || 0) || 0;
+      return {
+        id: p.id,
+        name: p.title || p.name || ('Product ' + p.id),
+        price: typeof p.price !== 'undefined' ? Number(p.price) : (p.price_str ? Number(p.price_str) : null),
+        desc: p.desc || p.description || '',
+        category: categoryName,
+        categorySlug,
+        image,
+        stock,
+        low_stock_threshold: threshold,
+        is_active: isActive,
+        is_sold: isSold,
+        is_low_stock: isLowStock,
+        avg_rating: avgRating,
+        reviews_count: reviewsCount,
+        created_at: p.created_at || ''
+      };
+    });
+  }
 
-        // Category filter
-        if (window.__tv_currentCategory && window.__tv_currentCategory !== 'All') {
-            filtered = filtered.filter(it => it.category === window.__tv_currentCategory);
-        }
+  function saveCache(list) {
+    try { localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list })); } catch (e) {}
+  }
 
-        // Search filter
-        if (searchTerm && searchTerm.trim()) {
-            const term = searchTerm.trim().toLowerCase();
-            filtered = filtered.filter(it =>
-                (it.title  && it.title.toLowerCase().includes(term)) ||
-                (it.desc   && it.desc.toLowerCase().includes(term))
-            );
-        }
-
-        if (!filtered.length) {
-            wrap.innerHTML = '<p style="color:#666">No products match your search.</p>';
-            return;
-        }
-
-        filtered.forEach(it => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.style.cssText = 'background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)';
-
-            const img = document.createElement('img');
-            img.src = (it.images && it.images[0]) || 'images/placeholder.png';
-            img.style.cssText = 'width:100%;height:160px;object-fit:cover;border-radius:6px';
-
-            const title = document.createElement('div');
-            title.style.cssText = 'font-weight:700;margin-top:8px';
-            title.textContent = it.title;
-
-            const price = document.createElement('div');
-            price.style.cssText = 'color:#156082;font-weight:600';
-            price.textContent = fmt(it.price);
-
-            const desc = document.createElement('div');
-            desc.style.cssText = 'font-size:13px;color:#333;margin-top:6px';
-            desc.textContent = it.desc;
-
-            const a = document.createElement('a');
-            a.href = `product_page.html?id=${encodeURIComponent(it.id)}`;
-            a.style.cssText = 'text-decoration:none;color:inherit';
-            a.appendChild(img); a.appendChild(title); a.appendChild(price); a.appendChild(desc);
-
-            if (it.category) {
-                const cat = document.createElement('div');
-                cat.style.cssText = 'font-size:12px;color:#666;margin-top:6px';
-                cat.textContent = (window.TVCategories && window.TVCategories.nameFor)
-                    ? window.TVCategories.nameFor(it.category) : it.category;
-                a.appendChild(cat);
-            }
-
-            card.appendChild(a);
-            wrap.appendChild(card);
-        });
-    }
-
-    // ── Search bar wiring ─────────────────────────────────────────────────────
-    function wireSearchBar() {
-        // Find any search input in the page (midnav or otherwise)
-        const searchInputs = Array.from(document.querySelectorAll('input[type="text"]'))
-            .filter(el => /search/i.test(el.placeholder || '') || /search/i.test(el.id || ''));
-
-        searchInputs.forEach(input => {
-            let debounceTimer;
-            input.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => render(input.value), 250);
-            });
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { clearTimeout(debounceTimer); render(input.value); }
-            });
-        });
-    }
-
-    // ── Category UI ───────────────────────────────────────────────────────────
-    function renderCategories() {
-        const container = document.getElementById('categories');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const allBtn = document.createElement('button');
-        allBtn.className = 'btn-ghost'; allBtn.textContent = 'All'; allBtn.dataset.slug = 'All';
-        allBtn.addEventListener('click', () => { window.__tv_currentCategory = 'All'; render(); highlightCategory('All'); });
-        container.appendChild(allBtn);
-
-        const cats = (window.TVCategories && typeof window.TVCategories.list === 'function')
-            ? window.TVCategories.list()
-            : [...new Set(allProducts.map(p => p.category).filter(Boolean))].map(s => ({ slug: s, name: s }));
-
-        cats.forEach(c => {
-            const b = document.createElement('button');
-            b.className = 'btn-ghost'; b.textContent = c.name; b.dataset.slug = c.slug;
-            b.addEventListener('click', () => { window.__tv_currentCategory = c.slug; render(); highlightCategory(c.slug); });
-            container.appendChild(b);
-        });
-
-        if (!window.__tv_currentCategory) window.__tv_currentCategory = 'All';
-        highlightCategory(window.__tv_currentCategory);
-    }
-
-    function highlightCategory(slug) {
-        const container = document.getElementById('categories');
-        if (!container) return;
-        Array.from(container.children).forEach(ch => {
-            const s = ch.dataset.slug || ch.textContent;
-            ch.style.opacity   = s === slug ? '1' : '0.65';
-            ch.style.transform = s === slug ? 'translateY(-1px)' : '';
-        });
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────────────
-    wrap.innerHTML = '<p style="color:#666">Loading products…</p>';
-
+  function loadCache() {
+    const raw = localStorage.getItem(PRODUCT_CACHE_KEY);
+    if (!raw) return null;
     try {
-        const serverProducts = await fetchProductsFromServer();
-        allProducts = serverProducts.map(normaliseServerProduct);
-    } catch (e) {
-        // Server not available — fall back to localStorage
-        seedSampleListings();
-        allProducts = loadLocalListings();
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && Array.isArray(parsed.data)) return parsed.data;
+      return null;
+    } catch {
+      return null;
     }
+  }
 
-    // Wait for categories module before rendering so category names resolve correctly
-    function initWhenReady() {
+  function renderCategories() {
+    if (!categoriesEl) return;
+    const catMap = new Map();
+    allProducts.forEach(p => { if (p.categorySlug) catMap.set(p.categorySlug, p.category || p.categorySlug); });
+    const cats = Array.from(catMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    categoriesEl.innerHTML = [`<button class="category-chip ${currentFilter.category === 'all' ? 'active' : ''}" data-category="all" type="button">All</button>`, ...cats.map(([slug, name]) => `<button class="category-chip ${currentFilter.category === slug ? 'active' : ''}" data-category="${escapeHtml(slug)}" type="button">${escapeHtml(name)}</button>`)].join('');
+    categoriesEl.querySelectorAll('[data-category]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter.category = (btn.getAttribute('data-category') || 'all').toLowerCase();
         renderCategories();
-        render();
-        wireSearchBar();
-    }
+        applyFilters();
+      });
+    });
+  }
 
-    if (window.TVCategories && typeof window.TVCategories.list === 'function') {
-        initWhenReady();
+  function renderProducts(list) {
+    if (resultsCountEl) resultsCountEl.textContent = `${list.length} product${list.length === 1 ? '' : 's'} shown`;
+    if (!list.length) {
+      listingsEl.innerHTML = `<p style="color:#666;margin-top:12px;">No products found. Try a different search or filter.</p>`;
+      return;
+    }
+    listingsEl.innerHTML = list.map(p => {
+      const metaNote = p.is_low_stock ? 'Order soon to avoid missing out.' : ((p.stock || 0) <= 0 || p.is_sold || !p.is_active) ? 'Currently unavailable for purchase.' : 'View details';
+      return `
+        <article class="product-card">
+          <a class="card-link" href="product_page.html?id=${encodeURIComponent(p.id)}">
+            <div class="product-thumb"><img src="${p.image}" alt="${escapeHtml(p.name)}" onerror="this.src='https://dummyimage.com/600x400/f2f4f7/1c3846&text=Tech+Verse'"></div>
+            <div class="product-category">${escapeHtml(p.category || '')}</div>
+            <h3 class="product-title">${escapeHtml(p.name)}</h3>
+            <div class="product-price">${p.price !== null ? formatPrice(p.price) : 'Price not available'}</div>
+            ${ratingSummary(p)}
+            <div class="tv-badge-wrap">${availabilityBadge(p)}</div>
+            <p class="product-desc">${escapeHtml(p.desc || '')}</p>
+            <div class="product-meta"><span>View details</span><span class="product-meta-note">${escapeHtml(metaNote)}</span></div>
+          </a>
+        </article>`;
+    }).join('');
+  }
+
+  function applyFilters() {
+    let list = allProducts.slice();
+    if (currentFilter.category && currentFilter.category !== 'all') list = list.filter(p => String(p.categorySlug || p.category).toLowerCase() === currentFilter.category);
+    if (currentFilter.search) {
+      const q = currentFilter.search.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(q) || (p.desc && p.desc.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q)));
+    }
+    const minPrice = parseFloat(currentFilter.minPrice);
+    if (Number.isFinite(minPrice)) list = list.filter(p => Number.isFinite(p.price) && p.price >= minPrice);
+    const maxPrice = parseFloat(currentFilter.maxPrice);
+    if (Number.isFinite(maxPrice)) list = list.filter(p => Number.isFinite(p.price) && p.price <= maxPrice);
+    const minRating = Number(currentFilter.minRating || 0);
+    if (minRating > 0) list = list.filter(p => Number(p.avg_rating || 0) >= minRating);
+    switch (currentFilter.sortBy) {
+      case 'price-asc': list.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); break;
+      case 'price-desc': list.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); break;
+      case 'rating-desc': list.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0)); break;
+      case 'name-asc': list.sort((a, b) => a.name.localeCompare(b.name)); break;
+      default: list.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')) || Number(b.id) - Number(a.id)); break;
+    }
+    renderProducts(list);
+  }
+
+  async function fetchProductsFromServer() {
+    const base = API_BASE.replace(/\/+$/, '');
+    const url = `${base}/products?per_page=200`;
+    const resp = await fetch(url, { credentials: 'include' });
+    if (!resp.ok) throw new Error('failed');
+    const data = await resp.json();
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.data)) return data.data;
+    return [];
+  }
+
+  async function initData() {
+    injectBadgeStyles();
+    try {
+      const rawList = await fetchProductsFromServer();
+      allProducts = normaliseProducts(rawList);
+      saveCache(allProducts);
+      renderCategories();
+      applyFilters();
+      return;
+    } catch (e) {}
+    const cached = loadCache();
+    if (cached && cached.length) {
+      allProducts = normaliseProducts(cached);
+      renderCategories();
+      applyFilters();
     } else {
-        window.addEventListener('tvCategoriesReady', initWhenReady, { once: true });
-        // Fallback if categories never arrive
-        setTimeout(() => { if (!window.TVCategories) initWhenReady(); }, 1500);
+      if (resultsCountEl) resultsCountEl.textContent = '0 products shown';
+      listingsEl.innerHTML = '<p style="color:#d00;">Unable to load products. Please try again later.</p>';
     }
+  }
 
-    // Re-render with converted prices when exchange rates load
-    window.addEventListener('tvCurrencyRatesReady', () => { try { render(); } catch (e) {} });
+  if (searchInput) searchInput.addEventListener('input', () => { currentFilter.search = searchInput.value.trim(); applyFilters(); });
+  if (minPriceEl) minPriceEl.addEventListener('input', () => { currentFilter.minPrice = minPriceEl.value.trim(); applyFilters(); });
+  if (maxPriceEl) maxPriceEl.addEventListener('input', () => { currentFilter.maxPrice = maxPriceEl.value.trim(); applyFilters(); });
+  if (minRatingEl) minRatingEl.addEventListener('change', () => { currentFilter.minRating = minRatingEl.value; applyFilters(); });
+  if (sortByEl) sortByEl.addEventListener('change', () => { currentFilter.sortBy = sortByEl.value; applyFilters(); });
+  if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', () => {
+    currentFilter = { category: 'all', search: '', minPrice: '', maxPrice: '', minRating: '0', sortBy: 'latest' };
+    if (searchInput) searchInput.value = '';
+    if (minPriceEl) minPriceEl.value = '';
+    if (maxPriceEl) maxPriceEl.value = '';
+    if (minRatingEl) minRatingEl.value = '0';
+    if (sortByEl) sortByEl.value = 'latest';
+    renderCategories();
+    applyFilters();
+  });
+
+  window.TechVerseListings = {
+    setCategory(cat) { currentFilter.category = (cat || 'all').toLowerCase(); renderCategories(); applyFilters(); },
+    getAllProducts() { return allProducts.slice(); }
+  };
+
+  initData();
 });

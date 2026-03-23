@@ -13,17 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const meta = document.querySelector('meta[name="tv-api-base"]');
       const raw = (window.TV_API_BASE || window.__TV_API_BASE__ || (meta && meta.content) || '').trim();
       return raw ? raw.replace(/\/+$/, '') : '';
-    } catch (e) {
-      return '';
-    }
+    } catch (e) { return ''; }
   }
 
-  function getCurrentUser() {
-    try {
-      return JSON.parse(localStorage.getItem('techverse_auth_user') || 'null');
-    } catch (e) {
-      return null;
-    }
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
   }
 
   let statusEl = document.getElementById('contact-status');
@@ -35,18 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
     form.appendChild(statusEl);
   }
 
-  const currentUser = getCurrentUser();
-  if (currentUser) {
-    if (nameInput && !nameInput.value) nameInput.value = currentUser.username || currentUser.name || '';
-    if (emailInput && !emailInput.value) emailInput.value = currentUser.email || '';
+  // Pre-fill from server session if signed in
+  async function prefillFromSession() {
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          if (nameInput && !nameInput.value) nameInput.value = data.user.name || '';
+          if (emailInput && !emailInput.value) emailInput.value = data.user.email || '';
+        }
+      }
+    } catch (e) {}
   }
+
+  prefillFromSession();
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const payload = {
-      name: (nameInput?.value || '').trim(),
-      email: (emailInput?.value || '').trim(),
+      name:    (nameInput?.value    || '').trim(),
+      email:   (emailInput?.value   || '').trim(),
       subject: (subjectInput?.value || '').trim(),
       message: (messageInput?.value || '').trim(),
     };
@@ -63,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const response = await fetch(`${apiBase()}/api/contact-messages`, {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
         },
-        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -76,10 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(data.error || data.message || 'Unable to send message.');
 
       form.reset();
-      if (currentUser) {
-        if (nameInput) nameInput.value = currentUser.username || currentUser.name || '';
-        if (emailInput) emailInput.value = currentUser.email || '';
-      }
+      // Re-prefill after reset
+      prefillFromSession();
       statusEl.style.color = '#1f6a2e';
       statusEl.textContent = 'Thanks — your message has been sent to the admin inbox.';
     } catch (error) {

@@ -17,13 +17,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       return '';
     }
   }
-
-  function getCurrentUser() {
-    try { return JSON.parse(localStorage.getItem('techverse_auth_user') || 'null'); } catch (e) { return null; }
+catch (e) { return null; }
   }
 
-  function getHeaders() {
-    const headers = { Accept: 'application/json' };
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+  }
+    function getHeaders() {
+    const headers = { Accept: 'application/json', 'X-CSRF-TOKEN': getCsrfToken() };
     const token = localStorage.getItem('techverse_session_token');
     if (token) headers['X-Session-Token'] = token;
     return headers;
@@ -225,20 +227,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderProducts(window.__adminProducts);
   }
 
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    authStatus.textContent = 'You must be signed in to access admin product tools. Redirecting...';
-    authStatus.style.color = '#d00';
-    setTimeout(() => location.href = 'signin.html', 1200);
-    return;
-  }
-
-  if (currentUser.role !== 'admin') {
-    authStatus.textContent = 'Access denied. This page is only for admin users.';
-    authStatus.style.color = '#d00';
-    setTimeout(() => location.href = 'index.html', 1500);
-    return;
-  }
+  // Verify admin via server session
+  let currentUser = null;
+  try {
+    const meRes = await fetch('/api/auth/me', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
+    });
+    if (meRes.ok) {
+      const meData = await meRes.json();
+      if (meData.authenticated && meData.user) currentUser = meData.user;
+    }
+  } catch (e) {}
+  if (!currentUser) { authStatus.textContent = 'You must be signed in to access admin product tools. Redirecting...'; authStatus.style.color = '#d00'; setTimeout(() => location.href = 'signin.html', 1200); return; }
+  if (currentUser.role !== 'admin') { authStatus.textContent = 'Access denied. This page is only for admin users.'; authStatus.style.color = '#d00'; setTimeout(() => location.href = 'index.html', 1500); return; }
 
   try {
     await loadCategories();

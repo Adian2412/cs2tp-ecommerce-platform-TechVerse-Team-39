@@ -1,125 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Admin Dashboard - Tech Verse</title>
-  <link rel="stylesheet" href="css/PP.css">
-  <link rel="stylesheet" href="css/seller.css">
-  <link rel="stylesheet" href="css/auth.css">
+  <title>Dashboard — Tech Verse Admin</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
   <style>
-    * { box-sizing: border-box; }
-    .admin-shell { max-width: 1240px; margin: 30px auto; padding: 0 16px; }
-    .admin-card { background: #fff; border: 1px solid #e7edf4; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,.05); }
-    .admin-section { padding: 20px; }
-    .admin-tabbar { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 20px; }
-    .admin-tab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid #d7e1ea; background: #fff; color: #1c3846; text-decoration: none; font-weight: 600; }
-    .admin-tab.active { background: #156082; color: #fff; border-color: #156082; }
-    .admin-alert { display: none; margin: 0 0 18px; padding: 14px 16px; border-radius: 12px; border: 1px solid transparent; }
-    .admin-alert-warning { background: #fff4df; border-color: #f2c36b; color: #7a4d00; }
-    .admin-alert-success { background: #edf9ef; border-color: #93d39c; color: #1f6a2e; }
-    .admin-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
-    .stat-card { background: #fff; border: 1px solid #e7edf4; border-radius: 14px; min-height: 122px; padding: 20px 22px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; box-shadow: 0 3px 10px rgba(0,0,0,.05); overflow: hidden; }
-    .stat-card h3 { margin: 0 0 12px; padding: 0; font-size: 16px; line-height: 1.3; text-align: left; width: 100%; }
-    .stat-big { margin: 0; padding: 0; font-size: 30px; font-weight: 700; color: #156082; line-height: 1; text-align: left; width: 100%; }
-    .stat-card-danger { border-color: #f2c36b; background: #fffaf0; }
-    .admin-sections { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px; }
-    .admin-panel { background: #fff; border: 1px solid #e7edf4; border-radius: 14px; padding: 16px; box-shadow: 0 3px 10px rgba(0,0,0,.05); }
-    .admin-panel h2, .admin-panel h3 { margin-top: 0; }
-    .admin-panel table { width: 100%; border-collapse: collapse; }
-    .admin-panel th, .admin-panel td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #edf1f5; vertical-align: top; }
-    .admin-panel th { font-size: .92rem; color: #425466; background: #f8fafc; }
-    .status-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; text-transform: capitalize; background: #edf2f7; }
-    .status-pending { background: #fff4cc; }
-    .status-paid { background: #d6f5ff; }
-    .status-shipped { background: #d8f5d1; }
-    .status-delivered { background: #e6fffa; color:#065f46; }
-    .status-returned { background: #f7d8ff; }
-    .status-cancelled { background: #ffe0e0; }
-    .row-warning td { background: #fffaf0; }
-    .row-critical td { background: #fff1f1; }
-    .muted { color: #667085; }
-    @media (max-width: 1100px) { .admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 980px) { .admin-sections { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .admin-grid { grid-template-columns: 1fr; } }
+    body { background: #f0f2f5; }
+    .tv-admin-page { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+    .tv-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .tv-stat-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; }
+    .tv-stat-card__label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tv-text-3); margin-bottom: 8px; }
+    .tv-stat-card__val { font-family: var(--tv-font-head); font-size: 32px; font-weight: 800; color: var(--tv-text); }
+    .tv-stat-card__sub { font-size: 12px; color: var(--tv-text-3); margin-top: 4px; }
+    .tv-admin-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; margin-bottom: 20px; }
+    .tv-admin-card h3 { font-family: var(--tv-font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-border); display: flex; align-items: center; gap: 8px; }
+    .tv-admin-card h3 i { color: var(--tv-primary); }
   </style>
 </head>
-<body class="window">
-  <div class="midnav">
-    <div class="logo"><h1>Tech Verse</h1></div>
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-      <ul class="right_of_search">
-        <li id="nav-fav" style="display:none;"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-        <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-        <li id="nav-user" style="display:none;"><a href="account.html"><i class="fa-regular fa-user"></i></a></li>
-        <li id="nav-auth-signin"><a href="signin.html">Sign in</a></li>
-        <li id="nav-auth-register"><a href="register.html">Register</a></li>
-        <li id="nav-auth-logout" style="display:none;"><a href="#" id="logout-link">Logout</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <main class="admin-shell">
-    <div class="admin-card">
-      <div class="admin-section">
-        <h1 style="margin-top:0;">Admin Dashboard</h1>
-        <p id="auth-status" class="muted">Checking admin access...</p>
-
-        <div id="admin-content" style="display:none;">
-          <div id="admin-alert-banner" class="admin-alert"></div>
-
-          <div class="admin-tabbar">
-            <a class="admin-tab active" href="admin.html"><i class="fa-solid fa-chart-line"></i> Overview</a>
-            <a class="admin-tab" href="admin-products.html"><i class="fa-solid fa-boxes-stacked"></i> Products &amp; Stock</a>
-            <a class="admin-tab" href="admin-returns.html"><i class="fa-solid fa-rotate-left"></i> Returns</a>
-            <a class="admin-tab" href="admin-reviews.html"><i class="fa-solid fa-star"></i> Reviews</a>
-            <a class="admin-tab" href="admin-messages.html"><i class="fa-regular fa-envelope"></i> Messages</a>
-            <a class="admin-tab" href="account.html"><i class="fa-regular fa-user"></i> My Account</a>
-            <a class="admin-tab" href="customer.html"><i class="fa-solid fa-shop"></i> Storefront</a>
-          </div>
-
-          <div id="stats-grid" class="admin-grid"></div>
-
-          <div class="admin-sections">
-            <div class="admin-panel">
-              <h2>Recent Orders</h2>
-              <div id="recent-orders"></div>
-            </div>
-
-            <div class="admin-panel">
-              <h2>Low Stock</h2>
-              <div id="low-stock"></div>
-            </div>
-
-            <div class="admin-panel" style="grid-column:1 / -1;">
-              <h2>Recent Users</h2>
-              <div id="recent-users"></div>
-            </div>
-
-            <div class="admin-panel" style="grid-column:1 / -1;">
-              <h3>Admin Notes</h3>
-              <p>This dashboard covers customer orders, stock alerts, returns processing, review moderation, service review moderation and separate admin-only tools.</p>
-              <p>Use <strong>Products &amp; Stock</strong> to manage inventory, <strong>Returns</strong> to process return requests, and <strong>Messages</strong> to read submissions from the contact form.</p>
-            </div>
-          </div>
-        </div>
+<body>
+  <!-- Admin nav -->
+  <div style="background:var(--tv-navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
+    <div style="max-width:1280px;margin:0 auto;padding:0 16px;display:flex;align-items:center;height:56px;gap:24px;">
+      <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;background:var(--tv-yellow);color:var(--tv-navy);border-radius:4px;text-transform:uppercase;letter-spacing:0.08em;">Admin</span>
+      <nav style="display:flex;gap:4px;margin-left:8px;">
+        <a href="admin.html" class="tv-catnav__link active">Dashboard</a>
+        <a href="admin-products.html" class="tv-catnav__link">Products</a>
+        <a href="admin-returns.html" class="tv-catnav__link">Returns</a>
+        <a href="admin-reviews.html" class="tv-catnav__link">Reviews</a>
+        <a href="admin-messages.html" class="tv-catnav__link">Messages</a>
+      </nav>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        <a href="customer.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);font-size:12px;">View Shop</a>
+        <button id="signout" class="tv-btn tv-btn--sm" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);font-size:12px;">Sign Out</button>
       </div>
     </div>
-  </main>
+  </div>
+  <div class="tv-admin-page">
+    <div id="auth-status" style="display:none;"></div>
+    <div id="admin-alert-banner" style="margin-bottom:16px;"></div>
+    <h1 class="tv-page-title" style="margin-bottom:20px;">Dashboard</h1>
 
-  <script src="admin.js"></script>
-  <script src="cart-badge.js"></script>
-  <script src="auth.js"></script>
-  <script src="global-search.js"></script>
+    <div id="stats-grid"><div class="tv-stat-grid">
+      <div class="tv-stat-card">
+        <div class="tv-stat-card__label"><i class="fa-solid fa-box" style="color:var(--tv-primary)"></i> Total Orders</div>
+        <div class="tv-stat-card__val" id="stat-orders" >—</div>
+        <div class="tv-stat-card__sub">All time</div>
+      </div>
+      <div class="tv-stat-card">
+        <div class="tv-stat-card__label"><i class="fa-solid fa-users" style="color:var(--tv-success)"></i> Users</div>
+        <div class="tv-stat-card__val" id="stat-users">—</div>
+        <div class="tv-stat-card__sub">Registered accounts</div>
+      </div>
+      <div class="tv-stat-card">
+        <div class="tv-stat-card__label"><i class="fa-solid fa-tag" style="color:var(--tv-accent)"></i> Products</div>
+        <div class="tv-stat-card__val" id="stat-products">—</div>
+        <div class="tv-stat-card__sub">Active listings</div>
+      </div>
+      <div class="tv-stat-card">
+        <div class="tv-stat-card__label"><i class="fa-solid fa-rotate-left" style="color:var(--tv-warning)"></i> Returns</div>
+        <div class="tv-stat-card__val" id="stat-returns">—</div>
+        <div class="tv-stat-card__sub">Pending requests</div>
+      </div>
+      <div class="tv-stat-card">
+        <div class="tv-stat-card__label"><i class="fa-solid fa-sterling-sign" style="color:var(--tv-success)"></i> Revenue</div>
+        <div class="tv-stat-card__val" id="stat-revenue">—</div>
+        <div class="tv-stat-card__sub">Total from orders</div>
+      </div>
+    </div></div>
+
+    <div id="admin-content"><div class="tv-admin-card">
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Orders</h3>
+      <div id="recent-orders"><p class="tv-muted"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p></div>
+    </div>
+
+  </div>
+  <div id="low-stock" style="display:none;"></div>
+  <div id="recent-users" style="display:none;"></div>
+  </div>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script src="javascript/admin.js"></script>
 </body>
 </html>

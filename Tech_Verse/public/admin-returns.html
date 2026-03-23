@@ -1,105 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Admin Returns - Tech Verse</title>
-  <link rel="stylesheet" href="css/PP.css">
-  <link rel="stylesheet" href="css/seller.css">
-  <link rel="stylesheet" href="css/auth.css">
+  <title>Return Requests — Tech Verse Admin</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
   <style>
-    * { box-sizing:border-box; }
-    .shell { max-width:1200px; margin:30px auto; padding:0 16px; }
-    .card { background:#fff; border:1px solid #e7edf4; border-radius:14px; box-shadow:0 3px 12px rgba(0,0,0,.05); padding:20px; }
-    .tabs { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 20px; }
-    .tab { display:inline-flex; gap:8px; align-items:center; padding:10px 14px; border-radius:999px; border:1px solid #d7e1ea; text-decoration:none; color:#1c3846; font-weight:600; }
-    .tab.active { background:#156082; color:#fff; border-color:#156082; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #edf1f5; vertical-align:top; }
-    .status-pill { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; text-transform:capitalize; background:#edf2f7; }
-    .status-requested { background:#fff4df; color:#8a5b00; }
-    .status-approved { background:#eaf7ec; color:#1f6a2e; }
-    .status-rejected { background:#fff1f1; color:#b42318; }
-    .status-refunded { background:#efe8ff; color:#6941c6; }
-    .toolbar { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
-    .toolbar select { padding:10px 12px; border:1px solid #d7e1ea; border-radius:10px; }
-    .btnish { border:1px solid #156082; background:#156082; color:#fff; border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:600; }
-    .muted { color:#667085; }
+    body { background: #f0f2f5; }
+    .tv-admin-page { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+    .tv-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .tv-stat-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; }
+    .tv-stat-card__label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tv-text-3); margin-bottom: 8px; }
+    .tv-stat-card__val { font-family: var(--tv-font-head); font-size: 32px; font-weight: 800; color: var(--tv-text); }
+    .tv-stat-card__sub { font-size: 12px; color: var(--tv-text-3); margin-top: 4px; }
+    .tv-admin-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; margin-bottom: 20px; }
+    .tv-admin-card h3 { font-family: var(--tv-font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-border); display: flex; align-items: center; gap: 8px; }
+    .tv-admin-card h3 i { color: var(--tv-primary); }
   </style>
 </head>
-<body class="window">
-  <div class="midnav">
-    <div class="logo"><h1>Tech Verse</h1></div>
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-      <ul class="right_of_search">
-        <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-        <li id="nav-user" style="display:none;"><a href="account.html"><i class="fa-regular fa-user"></i></a></li>
-        <li id="nav-auth-signin"><a href="signin.html">Sign in</a></li>
-        <li id="nav-auth-register"><a href="register.html">Register</a></li>
-        <li id="nav-auth-logout" style="display:none;"><a href="#" id="logout-link">Logout</a></li>
-      </ul>
+<body>
+  <!-- Admin nav -->
+  <div style="background:var(--tv-navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
+    <div style="max-width:1280px;margin:0 auto;padding:0 16px;display:flex;align-items:center;height:56px;gap:24px;">
+      <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;background:var(--tv-yellow);color:var(--tv-navy);border-radius:4px;text-transform:uppercase;letter-spacing:0.08em;">Admin</span>
+      <nav style="display:flex;gap:4px;margin-left:8px;">
+        <a href="admin.html" class="tv-catnav__link">Dashboard</a>
+        <a href="admin-products.html" class="tv-catnav__link">Products</a>
+        <a href="admin-returns.html" class="tv-catnav__link active">Returns</a>
+        <a href="admin-reviews.html" class="tv-catnav__link">Reviews</a>
+        <a href="admin-messages.html" class="tv-catnav__link">Messages</a>
+      </nav>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        <a href="customer.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);font-size:12px;">View Shop</a>
+        <button id="signout" class="tv-btn tv-btn--sm" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);font-size:12px;">Sign Out</button>
+      </div>
     </div>
   </div>
+  <div class="tv-admin-page">
+    <div id="returns-auth-status" style="display:none;"></div>
+    <div id="returns-admin-content">
+    <h1 class="tv-page-title" style="margin-bottom:20px;">Return Requests</h1>
 
-  <main class="shell">
-    <section class="card">
-      <h1 style="margin-top:0;">Returns Management</h1>
-      <p id="returns-auth-status" class="muted">Checking admin access...</p>
-      <div id="returns-admin-content" style="display:none;">
-        <div class="tabs">
-          <a class="tab" href="admin.html"><i class="fa-solid fa-chart-line"></i> Overview</a>
-          <a class="tab" href="admin-products.html"><i class="fa-solid fa-boxes-stacked"></i> Products &amp; Stock</a>
-          <a class="tab active" href="admin-returns.html"><i class="fa-solid fa-rotate-left"></i> Returns</a>
-          <a class="tab" href="admin-reviews.html"><i class="fa-solid fa-star"></i> Reviews</a>
-          <a class="tab" href="admin-messages.html"><i class="fa-regular fa-envelope"></i> Messages</a>
-        </div>
-
-        <div class="toolbar">
-          <div class="muted">Approve, reject or refund customer return requests here.</div>
-          <select id="return-filter">
-            <option value="all">All statuses</option>
-            <option value="requested">Requested</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="refunded">Refunded</option>
-          </select>
-        </div>
-
-        <div style="overflow:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Return</th>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Product</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Change</th>
-              </tr>
-            </thead>
-            <tbody id="returns-table-body">
-              <tr><td colspan="7" class="muted">Loading returns...</td></tr>
-            </tbody>
-          </table>
-        </div>
+    <div class="tv-admin-card">
+      <h3><i class="fa-solid fa-rotate-left"></i> Return Requests</h3>
+      <select id="return-filter" class="tv-input" style="max-width:180px;margin-bottom:14px;"><option value="">All statuses</option><option value="requested">Requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="refunded">Refunded</option></select>
+      <div style="overflow-x:auto;">
+        <table class="tv-table">
+          <thead>
+            <tr><th>Return ID</th><th>Order Item</th><th>Customer</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="returns-table-body">
+            <tr><td colspan="6" class="tv-muted" style="text-align:center;padding:32px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading returns...</td></tr>
+          </tbody>
+        </table>
       </div>
-    </section>
-  </main>
+    </div>
 
-  <script src="admin-returns.js"></script>
-  <script src="cart-badge.js"></script>
-  <script src="auth.js"></script>
-  <script src="global-search.js"></script>
+  </div>
+  </div>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script src="javascript/admin-returns.js"></script>
 </body>
 </html>

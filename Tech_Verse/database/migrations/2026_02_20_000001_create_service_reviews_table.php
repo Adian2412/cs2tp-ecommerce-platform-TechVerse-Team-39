@@ -8,18 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('baskets', function (Blueprint $table) {
+        Schema::create('service_reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
-                  ->unique()           // one basket per user, matches schema.sql
+                  ->unique()           // one service review per user
                   ->constrained('users')
                   ->cascadeOnDelete();
+            $table->tinyInteger('rating');
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('baskets');
+        Schema::dropIfExists('service_reviews');
     }
 };

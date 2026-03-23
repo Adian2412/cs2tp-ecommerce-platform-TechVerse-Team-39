@@ -3,82 +3,101 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AddressController extends Controller
 {
-    public function index()
+    protected function resolveUser(Request $request): ?User
     {
-        return response()->json(Address::orderByDesc('id')->paginate(20));
+        if (Auth::check()) return Auth::user();
+        $token = $request->header('X-Session-Token');
+        if ($token) {
+            $session = DB::table('sessions')->where('id', $token)->first();
+            if ($session && $session->user_id) {
+                $user = User::find($session->user_id);
+                if ($user) { Auth::login($user); return $user; }
+            }
+        }
+        $uid = $request->session()->get('auth_user_id');
+        return $uid ? User::find($uid) : null;
     }
 
-    public function store(Request $request)
+    public function index(Request $request): JsonResponse
     {
+        $user = $this->resolveUser($request);
+        if (!$user) return response()->json(['error' => 'Authentication required'], 401);
+        return response()->json($user->addresses()->get());
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $user = $this->resolveUser($request);
+        if (!$user) return response()->json(['error' => 'Authentication required'], 401);
+
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'line1' => 'required|string|max:180',
-            'line2' => 'nullable|string|max:180',
-            'city' => 'required|string|max:120',
-            'postcode' => 'required|string|max:20',
-            'country' => 'required|string|max:120',
+            'line1'      => 'required|string|max:180',
+            'line2'      => 'nullable|string|max:180',
+            'city'       => 'required|string|max:120',
+            'postcode'   => 'required|string|max:20',
+            'country'    => 'required|string|max:120',
             'is_default' => 'nullable|boolean',
         ]);
 
         if (!empty($validated['is_default'])) {
-            Address::where('user_id', $validated['user_id'])->update(['is_default' => false]);
+            $user->addresses()->update(['is_default' => false]);
         }
 
-        $address = Address::create([
-            'user_id' => $validated['user_id'],
-            'line1' => $validated['line1'],
-            'line2' => $validated['line2'] ?? null,
-            'city' => $validated['city'],
-            'postcode' => $validated['postcode'],
-            'country' => $validated['country'],
-            'is_default' => (bool) ($validated['is_default'] ?? false),
-        ]);
-
-        return response()->json([
-            'message' => 'Address created',
-            'address' => $address,
-        ], 201);
+        $address = $user->addresses()->create($validated);
+        return response()->json($address, 201);
     }
 
-    public function show($id)
+    public function show(Request $request, string $id): JsonResponse
     {
-        return response()->json(Address::findOrFail($id));
-    }
-
-    public function update(Request $request, $id)
-    {
+        $user = $this->resolveUser($request);
         $address = Address::findOrFail($id);
+        if (!$user || ($user->role !== 'admin' && $address->user_id !== $user->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        return response()->json($address);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $user = $this->resolveUser($request);
+        $address = Address::findOrFail($id);
+        if (!$user || ($user->role !== 'admin' && $address->user_id !== $user->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
 
         $validated = $request->validate([
-            'line1' => 'sometimes|string|max:180',
-            'line2' => 'nullable|string|max:180',
-            'city' => 'sometimes|string|max:120',
-            'postcode' => 'sometimes|string|max:20',
-            'country' => 'sometimes|string|max:120',
+            'line1'      => 'sometimes|string|max:180',
+            'line2'      => 'nullable|string|max:180',
+            'city'       => 'sometimes|string|max:120',
+            'postcode'   => 'sometimes|string|max:20',
+            'country'    => 'sometimes|string|max:120',
             'is_default' => 'nullable|boolean',
         ]);
 
         if (!empty($validated['is_default'])) {
-            Address::where('user_id', $address->user_id)
-                ->where('id', '!=', $address->id)
-                ->update(['is_default' => false]);
+            Address::where('user_id', $address->user_id)->update(['is_default' => false]);
         }
 
         $address->update($validated);
-
-        return response()->json([
-            'message' => 'Address updated',
-            'address' => $address,
-        ]);
+        return response()->json($address);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        Address::findOrFail($id)->delete();
-        return response()->json(['message' => 'Address deleted']);
+        $user = $this->resolveUser($request);
+        $address = Address::findOrFail($id);
+        if (!$user || ($user->role !== 'admin' && $address->user_id !== $user->id)) {
+            return response()->json(['error' => 'Access denied'], 403);
+        }
+        $address->delete();
+        return response()->json(['message' => 'Address deleted.']);
     }
 }

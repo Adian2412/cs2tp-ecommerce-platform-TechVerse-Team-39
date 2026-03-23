@@ -6,13 +6,14 @@ use App\Mail\OtpMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
-    // ── Register ─────────────────────────────────────────────────────────────
+    // ── Register ──────────────────────────────────────────────────────────────
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -34,7 +35,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // ── Login (step 1 – password check, sends OTP) ────────────────────────────
+    // ── Login — step 1: password check, sends OTP ─────────────────────────────
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -64,10 +65,10 @@ class AuthController extends Controller
         $otp     = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $otpHash = hash('sha256', $otp);
 
-        $request->session()->put('mfa_user_id',   $user->id);
-        $request->session()->put('mfa_otp_hash',  $otpHash);
+        $request->session()->put('mfa_user_id',    $user->id);
+        $request->session()->put('mfa_otp_hash',   $otpHash);
         $request->session()->put('mfa_otp_expiry', now()->addMinutes(10)->timestamp);
-        $request->session()->put('mfa_attempts',  0);
+        $request->session()->put('mfa_attempts',   0);
 
         Mail::to($user->email)->send(new OtpMail($otp, $user->name));
 
@@ -77,7 +78,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── Verify OTP (step 2) ───────────────────────────────────────────────────
+    // ── Verify OTP — step 2 ───────────────────────────────────────────────────
     public function verifyOtp(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -111,45 +112,62 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // OTP correct – clear MFA session data and fully log in
-        $user = User::find($userId);
+        // OTP correct — log in fully
+        $user = User::findOrFail($userId);
         $this->clearMfaSession($request);
 
+        // Store BOTH session formats so all controllers can resolve the user
+        Auth::login($user);
         $request->session()->put('auth_user_id', $user->id);
         $request->session()->regenerate();
 
-        return response()->json([
+        $userData = $user->toArray();
+        $userData['username'] = $user->name;
+
+        $response = response()->json([
             'authenticated' => true,
-            'user'          => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user'          => $userData,
+            'session_token' => $request->session()->getId(),
         ]);
+        $response->headers->set('X-Session-Token', $request->session()->getId());
+
+        return $response;
     }
 
-    // ── Me (check session) ────────────────────────────────────────────────────
+    // ── Me — session check ────────────────────────────────────────────────────
     public function me(Request $request): JsonResponse
     {
+        // Try Auth facade first
+        if (Auth::check()) {
+            $user = Auth::user()->toArray();
+            $user['username'] = $user['name'] ?? null;
+            return response()->json(['authenticated' => true, 'user' => $user]);
+        }
+
+        // Try session auth_user_id (OTP flow)
         $userId = $request->session()->get('auth_user_id');
-        if (! $userId) {
-            return response()->json(['authenticated' => false], 401);
-        }
-
-        $user = User::find($userId);
-        if (! $user) {
+        if ($userId) {
+            $user = User::find($userId);
+            if ($user) {
+                Auth::login($user);
+                $data = $user->toArray();
+                $data['username'] = $data['name'] ?? null;
+                return response()->json(['authenticated' => true, 'user' => $data]);
+            }
             $request->session()->forget('auth_user_id');
-            return response()->json(['authenticated' => false], 401);
         }
 
-        return response()->json([
-            'authenticated' => true,
-            'user'          => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
-        ]);
+        return response()->json(['authenticated' => false], 401);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
     public function logout(Request $request): JsonResponse
     {
-        $request->session()->forget(['auth_user_id', 'mfa_user_id', 'mfa_otp_hash', 'mfa_otp_expiry', 'mfa_attempts']);
+        Auth::logout();
+        $request->session()->forget([
+            'auth_user_id', 'mfa_user_id', 'mfa_otp_hash', 'mfa_otp_expiry', 'mfa_attempts'
+        ]);
         $request->session()->regenerate();
-
         return response()->json(['message' => 'Logged out successfully.']);
     }
 

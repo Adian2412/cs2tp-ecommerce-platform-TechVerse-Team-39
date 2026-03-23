@@ -2,99 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <meta name="csrf-token" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reliable Delivery - Tech Verse</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/delivery.css">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Delivery — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="topnav">
-    <nav>
-      <li class="static" id="flag">flag</li>
-      <li class="static" id="phone-number">phone number</li>
-      <div class="nav-right">
-        <li id="nav-myaccount"><a href="account.html">My account</a></li>
-        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
-        <script src="javascript/geo-flag.js"></script>
-        <li id="nav-checkout"><a href="cart.html">Checkout</a></li>
+  <!-- Top bar -->
+  <div class="tv-topbar">
+    <div class="tv-topbar__inner">
+      <div class="tv-topbar__flag" id="flag"><i class="fa-solid fa-globe"></i></div>
+      <div class="tv-topbar__links">
+        <a href="support.html"><i class="fa-solid fa-headset"></i> Support</a>
+        <a href="delivery.html"><i class="fa-solid fa-truck"></i> Free delivery over £50</a>
       </div>
-    </nav>
-  </div>
-
-  <hr>
-
-  <div class="midnav">
-    <div class="logo"><h1>Tech Verse</h1></div>
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-       <ul class="right_of_search">
-           <li id="nav-fav"><a href="#fav"><i class="fa-solid fa-heart"></i></a></li>
-           <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-           <li id="nav-user"><a href="#account"><i class="fa-solid fa-user"></i></a></li>
-       </ul>
-      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
     </div>
-    <hr>
+  </div>
+  <nav class="tv-nav">
+    <div class="tv-nav__inner">
+      <a href="index.html" class="tv-logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:42px;width:auto;object-fit:contain;"></a>
+      <form class="tv-search" onsubmit="event.preventDefault();location.href='customer.html?search='+encodeURIComponent(this.querySelector('input').value)">
+        <input class="tv-search__input" type="text" placeholder="Search for products...">
+        <button class="tv-search__btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="tv-nav__actions">
+        <a href="account.html" class="tv-nav__action"><i class="fa-regular fa-user"></i><span>Account</span></a>
+        <a href="liked.html" class="tv-nav__action"><i class="fa-regular fa-heart"></i><span>Saved</span></a>
+        <a href="cart.html" class="tv-nav__action">
+          <div class="tv-cart-badge"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="tv-cart-count" style="display:none"></span></div>
+          <strong>Cart</strong>
+        </a>
+        <button id="signin" class="tv-btn tv-btn--primary tv-btn--sm" onclick="location.href='signin.html'">Sign In</button>
+      </div>
+    </div>
+  </nav>
+  <div class="tv-catnav">
+    <div class="tv-catnav__inner">
+      <a href="customer.html" class="tv-catnav__link">All Products</a>
+      <a href="customer.html?cat=laptops" class="tv-catnav__link">Laptops</a>
+      <a href="customer.html?cat=gaming-gear" class="tv-catnav__link">Gaming</a>
+      <a href="customer.html?cat=headphones" class="tv-catnav__link">Audio</a>
+      <a href="customer.html?cat=accessories" class="tv-catnav__link">Accessories</a>
+      <a href="aboutus.html" class="tv-catnav__link">About</a>
+      <a href="contact.html" class="tv-catnav__link">Contact</a>
+      <a href="admin.html" class="tv-catnav__link" id="nav-admin" style="display:none;color:var(--tv-yellow)">Admin &#9733;</a>
+    </div>
   </div>
 
-  <main class="account-main">
-    <h2>Reliable Delivery</h2>
+  <div class="tv-page">
+    <div class="tv-breadcrumb">
+      <a href="index.html">Home</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <span>Delivery Information</span>
+    </div>
+    <h1 class="tv-page-title">Delivery Information</h1>
 
-    <details class="panel-block collapsible">
-      <summary>Fast and reliable shipping</summary>
-      <div class="panel-content">
-        <p>We partner with trusted carriers to deliver your orders quickly and safely. Delivery times vary by destination and shipping option chosen at checkout.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:24px;">
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <h3 style="font-family:var(--tv-font-head);font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-truck-fast" style="color:var(--tv-primary)"></i> Standard Delivery</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;margin-bottom:8px;">3–5 working days. Free on orders over £50, otherwise £3.99.</p>
+        <span class="tv-pill tv-pill--paid">Free over £50</span>
       </div>
-    </details>
-
-    <details class="panel-block collapsible">
-      <summary>Delivery options</summary>
-      <div class="panel-content">
-        <div class="delivery-features">
-          <div class="feature">
-            <h4>Standard Shipping</h4>
-            <p class="muted">3–7 business days — reliable and affordable for most orders.</p>
-          </div>
-          <div class="feature">
-            <h4>Expedited Shipping</h4>
-            <p class="muted">1–3 business days — when you need your item fast.</p>
-          </div>
-          <div class="feature">
-            <h4>International</h4>
-            <p class="muted">Delivery times vary by country and customs processing.</p>
-          </div>
-        </div>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <h3 style="font-family:var(--tv-font-head);font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-bolt" style="color:var(--tv-warning)"></i> Express Delivery</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;margin-bottom:8px;">Next working day delivery when ordered before 3pm. Available on most items.</p>
+        <span class="tv-pill tv-pill--pending">£6.99</span>
       </div>
-    </details>
-
-    <details class="panel-block collapsible">
-      <summary>Tracking your order</summary>
-      <div class="panel-content">
-        <p>Once your order ships you'll receive a confirmation email with a tracking number. Sign in and open "My account" → Orders for the latest status and tracking link.</p>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <h3 style="font-family:var(--tv-font-head);font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-globe" style="color:var(--tv-success)"></i> International</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;margin-bottom:8px;">We ship to EU and worldwide. Delivery times and costs vary by destination.</p>
+        <span class="tv-pill tv-pill--shipped">From £9.99</span>
       </div>
-    </details>
+    </div>
+    <div class="tv-alert tv-alert--info">
+      <i class="fa-solid fa-circle-info"></i> Orders placed before 3pm Monday–Friday are dispatched same day. We do not dispatch on weekends or bank holidays.
+    </div>
 
-    <details class="panel-block collapsible">
-      <summary>Free shipping</summary>
-      <div class="panel-content">
-        <p>We offer free standard shipping on orders over £50 (where available). Promotions may change — check the checkout page for current offers.</p>
-      </div>
-    </details>
+  </div>
 
-    <details class="panel-block collapsible">
-      <summary>Questions about delivery?</summary>
-      <div class="panel-content">
-        <p>Contact our support team at <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="34474144445b4640744051575c42514647511a514c5559445851">[email&#160;protected]</a></strong> or use the "24/7 Support" page for assistance.</p>
-      </div>
-    </details>
-  </main>
+  <footer class="tv-footer">
+    <div class="tv-footer__top">
+      <div class="tv-footer__col"><div class="tv-footer__col-title">TechVerse</div><ul><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Customer Service</div><ul><li><a href="support.html">Help &amp; Support</a></li><li><a href="returns-info.html">Returns</a></li><li><a href="delivery.html">Delivery Info</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">My Account</div><ul><li><a href="account.html">My Account</a></li><li><a href="cart.html">My Cart</a></li><li><a href="liked.html">Saved Items</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Shop</div><ul><li><a href="customer.html">Browse All</a></li></ul></div>
+    </div>
+    <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>
+  </footer>
 
-  <script data-cfasync="false" src="/c
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/geo-flag.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+
+</body>
+</html>

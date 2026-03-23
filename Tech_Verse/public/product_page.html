@@ -1,96 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="csrf-token" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title class="item">Tech verse</title>
-    <link rel="stylesheet" href="css/PP.css">
-    <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="css/auth.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Product — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    .tv-product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+    .tv-product-img-wrap {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-lg);
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      position: sticky;
+      top: 72px;
+      overflow: hidden;
+    }
+    .tv-product-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
+    .tv-product-detail__title {
+      font-family: var(--tv-font-head);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .tv-product-detail__brand { color: var(--tv-primary); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .tv-product-detail__rating { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .tv-product-detail__stars { color: var(--tv-warning); font-size: 18px; letter-spacing: -1px; }
+    .tv-product-detail__price {
+      font-family: var(--tv-font-head);
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--tv-text);
+      margin-bottom: 16px;
+    }
+
+    .tv-product-buy-box {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-lg);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .tv-product-buy-box .tv-btn { margin-bottom: 10px; }
+
+    .tv-product-detail__desc {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--tv-text-2);
+      margin-bottom: 20px;
+    }
+
+    .tv-reviews-section { margin-top: 40px; }
+    .tv-review-card {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .tv-review-card__meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .tv-review-card__author { font-weight: 600; font-size: 14px; }
+    .tv-review-card__stars { color: var(--tv-warning); font-size: 14px; }
+    .tv-review-card__date { color: var(--tv-text-3); font-size: 12px; margin-left: auto; }
+    .tv-review-card__text { font-size: 14px; color: var(--tv-text-2); line-height: 1.5; }
+
+    .tv-review-form-wrap {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .tv-review-form-wrap h3 { font-family: var(--tv-font-head); font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+
+    .tv-star-picker { display: flex; gap: 4px; margin-bottom: 14px; }
+    .tv-star-picker .star {
+      font-size: 28px;
+      color: #ddd;
+      cursor: pointer;
+      transition: color var(--tv-transition), transform var(--tv-transition);
+    }
+    .tv-star-picker .star.hover, .tv-star-picker .star.selected { color: var(--tv-warning); transform: scale(1.15); }
+
+    @media (max-width: 768px) {
+      .tv-product-layout { grid-template-columns: 1fr; }
+      .tv-product-img-wrap { position: static; aspect-ratio: 4/3; }
+    }
+  </style>
 </head>
-    
-<body class="window">
-    
-    <div class="midnav">
-        <div class="logo">
-            <h1>Tech Verse</h1>
-        </div>
+<body>
 
-        <nav class="left-of_search">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="customer.html">Browse</a></li>
-            <li><a href="contact.html">Contact us</a></li>
-            <li><a href="aboutus.html">About us</a></li>
-        </nav>
-
-        <div class="right_of_search">   
-            <input type="text" placeholder="Search..🔍">
-            <ul class="right_of_search">
-                <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-                <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge">0</span></a></li>
-                <li id="nav-user"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
-            </ul>
-            <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
-        </div>
-
-         <hr>
+  <!-- Top bar -->
+  <div class="tv-topbar">
+    <div class="tv-topbar__inner">
+      <div class="tv-topbar__flag" id="flag"><i class="fa-solid fa-globe"></i></div>
+      <div class="tv-topbar__links">
+        <a href="support.html"><i class="fa-solid fa-headset"></i> Support</a>
+        <a href="delivery.html"><i class="fa-solid fa-truck"></i> Free delivery over £50</a>
+      </div>
     </div>
-    
-    <div class="product_image_container">
-        <div class="product_image">
-        <p>replace this with sever image once db is done</p>
-        </div>
+  </div>
 
-        
-<div class="right_side">
-    <div class="info_container">
-        <div class="info_text">
-            <div id="prodname">Product Name</div>
-
-            <!-- Interactive star rating -->
-            <div id="prodstar" class="rating" aria-label="Product rating">
-                <span class="star" data-value="1" role="button" aria-label="1 star">★</span>
-                <span class="star" data-value="2" role="button" aria-label="2 stars">★</span>
-                <span class="star" data-value="3" role="button" aria-label="3 stars">★</span>
-                <span class="star" data-value="4" role="button" aria-label="4 stars">★</span>
-                <span class="star" data-value="5" role="button" aria-label="5 stars">★</span>
-            </div>
-
-            <div id="prodprice">Price</div>
-
-            <!-- Review form (hidden until rating selected) -->
-            <div id="review-area" class="review-form" style="display:none;">
-                <label for="review-text">Write a review</label>
-                <textarea id="review-text" rows="4" placeholder="Share your experience..."></textarea>
-                <button id="submit-review" type="button">Submit Review</button>
-            </div>
-        </div>
-
-        <div class="button_container">
-                <button id="add-to-cart">Add to Cart</button>
-                <button id="buy-now">Buy Now</button>
-                <button id="wishlist-button" class="icon-btn" type="button" aria-pressed="false" title="Add to wishlist">♡ Add to Wishlist</button>
-                <button id="like-button" class="icon-btn" type="button" aria-pressed="false" title="Like this product">♡ Like</button>
-        </div>
-    </div>  
-
-    <div class="product_description">
-        <p>Product description goes here...</p>
+  <!-- Nav -->
+  <nav class="tv-nav">
+    <div class="tv-nav__inner">
+      <a href="index.html" class="tv-logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:42px;width:auto;object-fit:contain;"></a>
+      <form class="tv-search" id="tv-search-form">
+        <input class="tv-search__input" id="tv-search-input" type="text" placeholder="Search for products, brands and more...">
+        <button class="tv-search__btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="tv-nav__actions">
+        <a href="account.html" class="tv-nav__action"><i class="fa-regular fa-user"></i><span>Account</span></a>
+        <a href="liked.html" class="tv-nav__action"><i class="fa-regular fa-heart"></i><span>Saved</span></a>
+        <a href="cart.html" class="tv-nav__action">
+          <div class="tv-cart-badge"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="tv-cart-count" style="display:none"></span></div>
+          <strong>Cart</strong>
+        </a>
+        <button id="signin" class="tv-btn tv-btn--primary tv-btn--sm" onclick="location.href='signin.html'">Sign In</button>
+      </div>
     </div>
-</div>
+  </nav>
+
+  <!-- Category nav -->
+  <div class="tv-catnav">
+    <div class="tv-catnav__inner">
+      <a href="customer.html" class="tv-catnav__link">All Products</a>
+      <a href="customer.html?cat=laptops" class="tv-catnav__link">Laptops</a>
+      <a href="customer.html?cat=gaming-gear" class="tv-catnav__link">Gaming</a>
+      <a href="customer.html?cat=headphones" class="tv-catnav__link">Audio</a>
+      <a href="customer.html?cat=accessories" class="tv-catnav__link">Accessories</a>
+      <a href="customer.html?cat=displays" class="tv-catnav__link">Monitors</a>
+      <a href="customer.html?cat=smartphones" class="tv-catnav__link">Phones</a>
+      <a href="customer.html?cat=computing" class="tv-catnav__link">Computing</a>
+      <a href="admin.html" class="tv-catnav__link" id="nav-admin" style="display:none;color:var(--tv-yellow)">Admin ★</a>
+    </div>
+  </div>
+
+  <div class="tv-page">
+    <!-- Breadcrumb -->
+    <div class="tv-breadcrumb">
+      <a href="index.html">Home</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <a href="customer.html">Products</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <span id="prodname-bc">Loading...</span>
     </div>
 
-    <!-- reviews list -->
-    <div id="reviews-list" class="review-list"></div>
+    <!-- Product layout -->
+    <div class="tv-product-layout">
+      <!-- Image -->
+      <div class="tv-product-img-wrap">
+        <div class="product_image" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+          <img src="https://dummyimage.com/500x500/f0f0f0/999&text=Loading..." alt="Product" id="product-main-img" style="max-width:100%;max-height:400px;object-fit:contain;">
+        </div>
+      </div>
 
-    <link rel="stylesheet" href="css/product.css">
+      <!-- Detail -->
+      <div>
+        <div id="prodname" class="tv-product-detail__title">Loading product...</div>
+        <div id="product-brand" class="tv-product-detail__brand"></div>
 
-    <script src="javascript/cart-badge.js"></script>
-    <script src="javascript/product.js"></script>
-    <script src="javascript/auth.js"></script>
-    <div id="cart-toast" class="cart-toast" style="display:none">Added to cart</div>
+        <div class="tv-product-detail__rating" id="rating-display" style="display:none">
+          <span id="prodstar" class="tv-product-detail__stars"></span>
+          <span id="rating-count" class="tv-muted" style="font-size:13px"></span>
+        </div>
+
+        <div id="prodprice" class="tv-product-detail__price">—</div>
+
+        <!-- Stock status -->
+        <div id="stock-status" style="margin-bottom:16px;"></div>
+
+        <!-- Buy box -->
+        <div class="tv-product-buy-box">
+          <button id="add-to-cart" class="tv-btn tv-btn--primary tv-btn--full tv-btn--lg" style="margin-bottom:10px;">
+            <i class="fa-solid fa-basket-shopping"></i> Add to Cart
+          </button>
+          <button id="buy-now" class="tv-btn tv-btn--blue tv-btn--full tv-btn--lg" style="margin-bottom:10px;">
+            <i class="fa-solid fa-bolt"></i> Buy Now
+          </button>
+          <div style="display:flex;gap:10px;">
+            <button id="wishlist-button" class="tv-btn tv-btn--ghost tv-btn--sm" style="flex:1;">
+              <i class="fa-regular fa-heart"></i> Wishlist
+            </button>
+            <button id="like-button" class="tv-btn tv-btn--ghost tv-btn--sm" style="flex:1;">
+              <i class="fa-regular fa-thumbs-up"></i> Like
+            </button>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="tv-product-detail__desc product_description">
+          <p>Loading description...</p>
+        </div>
+
+        <!-- Review eligibility notice -->
+        <div id="review-eligibility-note"></div>
+
+        <!-- Review form -->
+        <div id="review-area" class="tv-review-form-wrap" style="display:none;">
+          <h3>Write a Review</h3>
+          <div class="tv-star-picker" id="prodstar-picker">
+            <span class="star" data-value="1" role="button" aria-label="1 star">★</span>
+            <span class="star" data-value="2" role="button" aria-label="2 stars">★</span>
+            <span class="star" data-value="3" role="button" aria-label="3 stars">★</span>
+            <span class="star" data-value="4" role="button" aria-label="4 stars">★</span>
+            <span class="star" data-value="5" role="button" aria-label="5 stars">★</span>
+          </div>
+          <textarea id="review-text" class="tv-input" rows="4" placeholder="Share your experience with this product..." style="margin-bottom:12px;resize:vertical;"></textarea>
+          <button id="submit-review" class="tv-btn tv-btn--blue">Submit Review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews section -->
+    <div class="tv-reviews-section">
+      <h2 class="tv-page-title" style="font-size:20px;">Customer Reviews</h2>
+      <div id="reviews-list"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="tv-footer">
+    <div class="tv-footer__top">
+      <div class="tv-footer__col"><div class="tv-footer__col-title">TechVerse</div><ul><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Customer Service</div><ul><li><a href="support.html">Help &amp; Support</a></li><li><a href="returns-info.html">Returns</a></li><li><a href="delivery.html">Delivery Info</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">My Account</div><ul><li><a href="account.html">My Account</a></li><li><a href="cart.html">My Cart</a></li><li><a href="liked.html">Saved Items</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Shop</div><ul><li><a href="customer.html">Browse All</a></li></ul></div>
+    </div>
+    <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>
+  </footer>
+
+  <div id="cart-toast" class="cart-toast">✓ Added to cart</div>
+
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/product.js"></script>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/geo-flag.js"></script>
   <script src="javascript/cookie-consent.js"></script>
+  <script>
+    // Patch product.js star picker to use new IDs
+    document.addEventListener('DOMContentLoaded', () => {
+      // Sync breadcrumb with product name
+      const observer = new MutationObserver(() => {
+        const name = document.getElementById('prodname')?.textContent;
+        const bc = document.getElementById('prodname-bc');
+        if (name && bc && name !== 'Loading product...') { bc.textContent = name; observer.disconnect(); }
+      });
+      const prodname = document.getElementById('prodname');
+      if (prodname) observer.observe(prodname, { childList: true, characterData: true, subtree: true });
+
+      // Product image sync
+      const imgWrap = document.querySelector('.product_image');
+      if (imgWrap) {
+        const img = document.getElementById('product-main-img');
+        if (img) imgWrap.appendChild(img);
+      }
+
+      // Search form
+      const sf = document.getElementById('tv-search-form');
+      if (sf) sf.addEventListener('submit', e => { e.preventDefault(); const q = document.getElementById('tv-search-input')?.value?.trim(); if (q) location.href = 'customer.html?search=' + encodeURIComponent(q); });
+    });
+  </script>
 </body>
 </html>

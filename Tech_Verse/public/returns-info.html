@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Seller Dashboard — Tech Verse</title>
+  <title>Returns Policy — Tech Verse</title>
   <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
 </head>
@@ -55,29 +55,34 @@
     <div class="tv-breadcrumb">
       <a href="index.html">Home</a>
       <span class="tv-breadcrumb__sep">/</span>
-      <span>Seller Dashboard</span>
+      <span>Returns Policy</span>
     </div>
-    <h1 class="tv-page-title">Seller Dashboard</h1>
+    <h1 class="tv-page-title">Returns Policy</h1>
 
-    <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;margin-bottom:20px;">
-      <h3 style="font-family:var(--tv-font-head);font-size:16px;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-tag" style="color:var(--tv-primary);margin-right:8px;"></i>My Listings</h3>
-      <div id="seller-listings">
-        <p class="tv-muted"><i class="fa-solid fa-spinner fa-spin"></i> Loading your listings...</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <div style="font-size:32px;color:var(--tv-primary);margin-bottom:12px;"><i class="fa-solid fa-rotate-left"></i></div>
+        <h3 style="font-family:var(--tv-font-head);font-size:17px;font-weight:700;margin-bottom:8px;">30-Day Returns</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;">Changed your mind? Return any item within 30 days for a full refund, no questions asked.</p>
+      </div>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <div style="font-size:32px;color:var(--tv-success);margin-bottom:12px;"><i class="fa-solid fa-box"></i></div>
+        <h3 style="font-family:var(--tv-font-head);font-size:17px;font-weight:700;margin-bottom:8px;">Free Return Postage</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;">We cover return postage costs. Simply print your label and drop off at any post office.</p>
+      </div>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <div style="font-size:32px;color:var(--tv-warning);margin-bottom:12px;"><i class="fa-solid fa-sterling-sign"></i></div>
+        <h3 style="font-family:var(--tv-font-head);font-size:17px;font-weight:700;margin-bottom:8px;">Fast Refunds</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;">Once we receive your return, refunds are processed within 3–5 working days back to your original payment method.</p>
+      </div>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+        <div style="font-size:32px;color:var(--tv-accent);margin-bottom:12px;"><i class="fa-solid fa-headset"></i></div>
+        <h3 style="font-family:var(--tv-font-head);font-size:17px;font-weight:700;margin-bottom:8px;">Dedicated Support</h3>
+        <p style="font-size:14px;color:var(--tv-text-2);line-height:1.6;">Have a problem? Our team is available 24/7 to help with any returns or refund queries.</p>
       </div>
     </div>
-    <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
-      <h3 style="font-family:var(--tv-font-head);font-size:16px;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-plus" style="color:var(--tv-success);margin-right:8px;"></i>List New Product</h3>
-      <div id="seller-msg" style="margin-bottom:12px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div class="tv-form-group"><label class="tv-label">Product Name</label><input id="item-title" class="tv-input" type="text" placeholder="e.g. Sony WH-1000XM5"></div>
-        <div class="tv-form-group"><label class="tv-label">Category</label><input id="item-category" class="tv-input" type="text" placeholder="e.g. Headphones"></div>
-        <div class="tv-form-group"><label class="tv-label">Price (£)</label><input id="item-price" class="tv-input" type="number" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="tv-form-group"><label class="tv-label">Stock</label><input id="item-quantity" class="tv-input" type="number" min="0" placeholder="1"></div>
-        <div class="tv-form-group"><label class="tv-label">Brand</label><input id="s-brand" class="tv-input" type="text" placeholder="Brand name"></div>
-        <div class="tv-form-group"><label class="tv-label">Image URL</label><input id="item-images" class="tv-input" type="url" placeholder="https://..."></div>
-        <div class="tv-form-group" style="grid-column:1/-1;"><label class="tv-label">Description</label><textarea id="item-desc" class="tv-input" rows="3" style="resize:vertical;"></textarea></div>
-      </div>
-      <button id="publish" class="tv-btn tv-btn--blue" style="margin-top:14px;"><i class="fa-solid fa-upload"></i> List Product</button>
+    <div class="tv-alert tv-alert--info">
+      <i class="fa-solid fa-circle-info"></i> To start a return, go to <a href="account.html#orders" style="color:var(--tv-primary);font-weight:600;">My Account &rarr; Orders</a> and select the item you wish to return.
     </div>
 
   </div>
@@ -92,12 +97,10 @@
     <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>
   </footer>
 
-  <div id="tv-undo-snackbar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;display:none;z-index:9999;"></div>
-  <div id="preview" style="display:none;"></div>
   <script src="javascript/cart-badge.js"></script>
   <script src="javascript/auth.js"></script>
   <script src="javascript/geo-flag.js"></script>
   <script src="javascript/cookie-consent.js"></script>
-  <script src="javascript/seller.js"></script>
+
 </body>
 </html>

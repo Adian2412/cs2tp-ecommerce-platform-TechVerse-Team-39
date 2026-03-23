@@ -2,95 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <meta name="csrf-token" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Payments - Tech Verse</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/payments.css">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Payments — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="topnav">
-    <nav>
-      <li class="static" id="flag">flag</li>
-      <li class="static" id="phone-number">phone number</li>
-      <div class="nav-right">
-        <li id="nav-myaccount"><a href="account.html">My account</a></li>
-        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
-        <script src="javascript/geo-flag.js"></script>
-        <li id="nav-checkout"><a href="cart.html">Checkout</a></li>
+  <!-- Top bar -->
+  <div class="tv-topbar">
+    <div class="tv-topbar__inner">
+      <div class="tv-topbar__flag" id="flag"><i class="fa-solid fa-globe"></i></div>
+      <div class="tv-topbar__links">
+        <a href="support.html"><i class="fa-solid fa-headset"></i> Support</a>
+        <a href="delivery.html"><i class="fa-solid fa-truck"></i> Free delivery over £50</a>
       </div>
-    </nav>
-  </div>
-
-  <hr>
-
-  <div class="midnav">
-    <div class="logo"><h1>Tech Verse</h1></div>
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-       <ul class="right_of_search">
-           <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-           <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-           <li id="nav-user"><a href="#account"><i class="fa-solid fa-user"></i></a></li>
-       </ul>
-      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
     </div>
-    <hr>
+  </div>
+  <nav class="tv-nav">
+    <div class="tv-nav__inner">
+      <a href="index.html" class="tv-logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:42px;width:auto;object-fit:contain;"></a>
+      <form class="tv-search" onsubmit="event.preventDefault();location.href='customer.html?search='+encodeURIComponent(this.querySelector('input').value)">
+        <input class="tv-search__input" type="text" placeholder="Search for products...">
+        <button class="tv-search__btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="tv-nav__actions">
+        <a href="account.html" class="tv-nav__action"><i class="fa-regular fa-user"></i><span>Account</span></a>
+        <a href="liked.html" class="tv-nav__action"><i class="fa-regular fa-heart"></i><span>Saved</span></a>
+        <a href="cart.html" class="tv-nav__action">
+          <div class="tv-cart-badge"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="tv-cart-count" style="display:none"></span></div>
+          <strong>Cart</strong>
+        </a>
+        <button id="signin" class="tv-btn tv-btn--primary tv-btn--sm" onclick="location.href='signin.html'">Sign In</button>
+      </div>
+    </div>
+  </nav>
+  <div class="tv-catnav">
+    <div class="tv-catnav__inner">
+      <a href="customer.html" class="tv-catnav__link">All Products</a>
+      <a href="customer.html?cat=laptops" class="tv-catnav__link">Laptops</a>
+      <a href="customer.html?cat=gaming-gear" class="tv-catnav__link">Gaming</a>
+      <a href="customer.html?cat=headphones" class="tv-catnav__link">Audio</a>
+      <a href="customer.html?cat=accessories" class="tv-catnav__link">Accessories</a>
+      <a href="aboutus.html" class="tv-catnav__link">About</a>
+      <a href="contact.html" class="tv-catnav__link">Contact</a>
+      <a href="admin.html" class="tv-catnav__link" id="nav-admin" style="display:none;color:var(--tv-yellow)">Admin &#9733;</a>
+    </div>
   </div>
 
-  <main class="account-main">
-    <h2>Secure Payments</h2>
-    <details class="panel-block collapsible no-bullets">
-      <summary>How we protect your payment details</summary>
-      <div class="panel-content">
-        <p>We use industry-standard security practices to protect your payment information when you check out.</p>
-        <ul>
-          <li>All transactions use TLS (HTTPS) to encrypt data in transit.</li>
-          <li>We never store raw card numbers on our servers.</li>
-          <li>Payments are processed by our trusted partners (Stripe/PayPal or other processor).</li>
-          <li>Fraud detection and monitoring help block suspicious activity.</li>
-        </ul>
-      </div>
-    </details>
+  <div class="tv-page">
+    <div class="tv-breadcrumb">
+      <a href="index.html">Home</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <span>Secure Payments</span>
+    </div>
+    <h1 class="tv-page-title">Secure Payments</h1>
 
-    <details class="panel-block collapsible">
-      <summary>Accepted payment methods</summary>
-      <div class="panel-content">
-        <p>We accept most major credit and debit cards, as well as popular digital wallets.</p>
-        <div class="payment-methods" style="margin-top:12px">
-          <div class="method">
-            <div class="brand">Visa</div>
-            <div class="muted">Credit &amp; debit</div>
-          </div>
-          <div class="method">
-            <div class="brand">Mastercard</div>
-            <div class="muted">Credit &amp; debit</div>
-          </div>
-          <div class="method">
-            <div class="brand">PayPal</div>
-            <div class="muted">Digital wallet</div>
-          </div>
-          <div class="method">
-            <div class="brand">Apple Pay</div>
-            <div class="muted">Mobile wallet</div>
-          </div>
-        </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:20px;text-align:center;">
+        <i class="fa-solid fa-lock" style="font-size:32px;color:var(--tv-primary);margin-bottom:12px;display:block;"></i>
+        <h3 style="font-family:var(--tv-font-head);font-size:15px;font-weight:700;margin-bottom:6px;">SSL Encrypted</h3>
+        <p style="font-size:13px;color:var(--tv-text-2);">All transactions are protected with 256-bit SSL encryption.</p>
       </div>
-    </details>
-
-    <details class="panel-block collapsible">
-      <summary>Questions?</summary>
-      <div class="panel-content">
-        <p>Contact support for billing questions or disputes: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6c1f191c1c031e182c18090f041a091e1f094209140d011c0009">[email&#160;protected]</a></strong></p>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:20px;text-align:center;">
+        <i class="fa-solid fa-credit-card" style="font-size:32px;color:var(--tv-success);margin-bottom:12px;display:block;"></i>
+        <h3 style="font-family:var(--tv-font-head);font-size:15px;font-weight:700;margin-bottom:6px;">All Major Cards</h3>
+        <p style="font-size:13px;color:var(--tv-text-2);">Visa, Mastercard, American Express and more.</p>
       </div>
-    </details>
-  </main>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:20px;text-align:center;">
+        <i class="fa-solid fa-shield-halved" style="font-size:32px;color:var(--tv-accent);margin-bottom:12px;display:block;"></i>
+        <h3 style="font-family:var(--tv-font-head);font-size:15px;font-weight:700;margin-bottom:6px;">Fraud Protection</h3>
+        <p style="font-size:13px;color:var(--tv-text-2);">Advanced fraud detection on every transaction.</p>
+      </div>
+      <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:20px;text-align:center;">
+        <i class="fa-solid fa-rotate-left" style="font-size:32px;color:var(--tv-warning);margin-bottom:12px;display:block;"></i>
+        <h3 style="font-family:var(--tv-font-head);font-size:15px;font-weight:700;margin-bottom:6px;">Easy Refunds</h3>
+        <p style="font-size:13px;color:var(--tv-text-2);">Refunds processed within 3–5 working days.</p>
+      </div>
+    </div>
+    <div class="tv-alert tv-alert--info">
+      <i class="fa-solid fa-circle-info"></i> Tech Verse is a student demo project. Payments are simulated — no real card data is ever collected or stored.
+    </div>
 
-  <script data-cfasync="false" src="/c
+  </div>
+
+  <footer class="tv-footer">
+    <div class="tv-footer__top">
+      <div class="tv-footer__col"><div class="tv-footer__col-title">TechVerse</div><ul><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Customer Service</div><ul><li><a href="support.html">Help &amp; Support</a></li><li><a href="returns-info.html">Returns</a></li><li><a href="delivery.html">Delivery Info</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">My Account</div><ul><li><a href="account.html">My Account</a></li><li><a href="cart.html">My Cart</a></li><li><a href="liked.html">Saved Items</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Shop</div><ul><li><a href="customer.html">Browse All</a></li></ul></div>
+    </div>
+    <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>
+  </footer>
+
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/geo-flag.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+
+</body>
+</html>

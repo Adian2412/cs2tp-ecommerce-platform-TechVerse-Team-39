@@ -1,196 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Admin Products & Stock - Tech Verse</title>
-  <link rel="stylesheet" href="css/PP.css">
-  <link rel="stylesheet" href="css/seller.css">
-  <link rel="stylesheet" href="css/auth.css">
+  <title>Products & Stock — Tech Verse Admin</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
   <style>
-    .admin-shell { max-width:1240px; margin:30px auto; padding:0 16px; }
-    .admin-card { background:#fff; border:1px solid #e7edf4; border-radius:14px; box-shadow:0 3px 12px rgba(0,0,0,.05); }
-    .admin-section { padding:20px; }
-    .admin-tabbar { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 20px; }
-    .admin-tab { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; border:1px solid #d7e1ea; background:#fff; color:#1c3846; text-decoration:none; font-weight:600; }
-    .admin-tab.active { background:#156082; color:#fff; border-color:#156082; }
-    .toolbar { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
-    .toolbar .search { min-width:260px; max-width:380px; width:100%; }
-    .toolbar .search input { width:100%; padding:11px 14px; border:1px solid #d7e1ea; border-radius:10px; }
-    .btnish { border:1px solid #156082; background:#156082; color:#fff; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:600; }
-    .btnish.secondary { background:#fff; color:#156082; }
-    .btnish.danger { background:#fff5f5; border-color:#d66; color:#b42318; }
-    .admin-grid { display:grid; grid-template-columns:1.35fr .95fr; gap:18px; }
-    .table-wrap { overflow:auto; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { text-align:left; padding:11px 9px; border-bottom:1px solid #edf1f5; vertical-align:top; }
-    th { font-size:.92rem; color:#425466; background:#f8fafc; position:sticky; top:0; }
-    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; }
-    .badge-ok { background:#eaf7ec; color:#1f6a2e; }
-    .badge-low { background:#fff4df; color:#8a5b00; }
-    .badge-out { background:#fff0f0; color:#b42318; }
-    .badge-off { background:#eef2f6; color:#425466; }
-    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-    .form-grid .full { grid-column:1 / -1; }
-    .form-grid label { font-weight:600; color:#29404b; display:block; }
-    .form-grid input, .form-grid textarea, .form-grid select { width:100%; margin-top:6px; padding:11px 12px; border:1px solid #d7e1ea; border-radius:10px; font:inherit; }
-    .form-grid textarea { min-height:120px; resize:vertical; }
-    .muted { color:#667085; }
-    .inline-actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .stock-adjust { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .stock-adjust input { width:120px; }
-    .notice { margin-bottom:16px; padding:12px 14px; border-radius:10px; display:none; }
-    .notice.success { background:#edf9ef; color:#1f6a2e; border:1px solid #93d39c; }
-    .notice.error { background:#fff1f1; color:#b42318; border:1px solid #efb5b5; }
-    @media (max-width: 980px) { .admin-grid { grid-template-columns:1fr; } .form-grid { grid-template-columns:1fr; } }
+    body { background: #f0f2f5; }
+    .tv-admin-page { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+    .tv-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .tv-stat-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; }
+    .tv-stat-card__label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tv-text-3); margin-bottom: 8px; }
+    .tv-stat-card__val { font-family: var(--tv-font-head); font-size: 32px; font-weight: 800; color: var(--tv-text); }
+    .tv-stat-card__sub { font-size: 12px; color: var(--tv-text-3); margin-top: 4px; }
+    .tv-admin-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-lg); padding: 20px; margin-bottom: 20px; }
+    .tv-admin-card h3 { font-family: var(--tv-font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-border); display: flex; align-items: center; gap: 8px; }
+    .tv-admin-card h3 i { color: var(--tv-primary); }
   </style>
 </head>
-<body class="window">
-  <div class="midnav">
-    <div class="logo"><h1>Tech Verse</h1></div>
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li id="nav-admin" style="display:none;"><a href="admin.html">Admin</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-      <ul class="right_of_search">
-        <li id="nav-cart"><a href="cart.html"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="cart-badge"></span></a></li>
-        <li id="nav-user" style="display:none;"><a href="account.html"><i class="fa-regular fa-user"></i></a></li>
-        <li id="nav-auth-signin"><a href="signin.html">Sign in</a></li>
-        <li id="nav-auth-register"><a href="register.html">Register</a></li>
-        <li id="nav-auth-logout" style="display:none;"><a href="#" id="logout-link">Logout</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <main class="admin-shell">
-    <div class="admin-card">
-      <div class="admin-section">
-        <h1 style="margin-top:0;">Products &amp; Stock</h1>
-        <p id="auth-status" class="muted">Checking admin access...</p>
-
-        <div id="admin-content" style="display:none;">
-          <div class="admin-tabbar">
-            <a class="admin-tab" href="admin.html"><i class="fa-solid fa-chart-line"></i> Overview</a>
-            <a class="admin-tab active" href="admin-products.html"><i class="fa-solid fa-boxes-stacked"></i> Products &amp; Stock</a>
-            <a class="admin-tab" href="admin-returns.html"><i class="fa-solid fa-rotate-left"></i> Returns</a>
-            <a class="admin-tab" href="admin-messages.html"><i class="fa-regular fa-envelope"></i> Messages</a>
-            <a class="admin-tab" href="account.html"><i class="fa-regular fa-user"></i> My Account</a>
-            <a class="admin-tab" href="customer.html"><i class="fa-solid fa-shop"></i> Storefront</a>
-          </div>
-
-          <div id="notice" class="notice"></div>
-
-          <div class="admin-grid">
-            <section class="admin-card admin-section">
-              <div class="toolbar">
-                <div class="search"><input id="product-search" type="search" placeholder="Search products by name, brand or slug"></div>
-                <div class="inline-actions">
-                  <button id="refresh-products" class="btnish secondary" type="button">Refresh</button>
-                  <button id="new-product-btn" class="btnish" type="button">New product</button>
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Product</th>
-                      <th>Category</th>
-                      <th>Price</th>
-                      <th>Stock</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="products-table-body">
-                    <tr><td colspan="7" class="muted">Loading products...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section class="admin-card admin-section">
-              <h2 id="form-title" style="margin-top:0;">Add product</h2>
-              <form id="product-form">
-                <input type="hidden" id="product-id">
-                <div class="form-grid">
-                  <label>Name
-                    <input id="name" type="text" required maxlength="180">
-                  </label>
-
-                  <label>Brand
-                    <input id="brand" type="text" maxlength="120">
-                  </label>
-
-                  <label>Category
-                    <select id="category_id"></select>
-                  </label>
-
-                  <label>Or add new category
-                    <input id="new_category_name" type="text" maxlength="120" placeholder="Leave blank to use selected category">
-                  </label>
-
-                  <label>Price (£)
-                    <input id="price" type="number" min="0" step="0.01" required>
-                  </label>
-
-                  <label>Stock quantity
-                    <input id="stock" type="number" min="0" step="1" required>
-                  </label>
-
-                  <label>Low stock threshold
-                    <input id="low_stock_threshold" type="number" min="0" step="1" value="5" required>
-                  </label>
-
-                  <label>Variant label
-                    <input id="variant_label" type="text" maxlength="120" value="Default">
-                  </label>
-
-                  <label>SKU
-                    <input id="sku" type="text" maxlength="80" placeholder="Optional - leave blank to auto-generate">
-                  </label>
-
-                  <label>Image URL or local path
-                    <input id="image_url" type="text" maxlength="255" placeholder="https://... or images/products/example.jpg">
-                  </label>
-
-                  <label>Upload image file
-                    <input id="image_file" type="file" accept="image/*">
-                    <small class="muted" style="display:block;margin-top:6px;">If you choose a file, it will be uploaded into <strong>public_html/images/products</strong> and used automatically.</small>
-                  </label>
-
-                  <label class="full">Description
-                    <textarea id="description"></textarea>
-                  </label>
-
-                  <label class="full" style="display:flex;align-items:center;gap:10px;">
-                    <input id="active" type="checkbox" checked style="width:auto;margin:0;">
-                    Visible on the customer site
-                  </label>
-                </div>
-
-                <div class="inline-actions" style="margin-top:16px;">
-                  <button class="btnish" type="submit">Save product</button>
-                  <button id="reset-form" class="btnish secondary" type="button">Clear form</button>
-                </div>
-              </form>
-            </section>
-          </div>
-        </div>
+<body>
+  <!-- Admin nav -->
+  <div style="background:var(--tv-navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
+    <div style="max-width:1280px;margin:0 auto;padding:0 16px;display:flex;align-items:center;height:56px;gap:24px;">
+      <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;background:var(--tv-yellow);color:var(--tv-navy);border-radius:4px;text-transform:uppercase;letter-spacing:0.08em;">Admin</span>
+      <nav style="display:flex;gap:4px;margin-left:8px;">
+        <a href="admin.html" class="tv-catnav__link">Dashboard</a>
+        <a href="admin-products.html" class="tv-catnav__link active">Products</a>
+        <a href="admin-returns.html" class="tv-catnav__link">Returns</a>
+        <a href="admin-reviews.html" class="tv-catnav__link">Reviews</a>
+        <a href="admin-messages.html" class="tv-catnav__link">Messages</a>
+      </nav>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        <a href="customer.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);font-size:12px;">View Shop</a>
+        <button id="signout" class="tv-btn tv-btn--sm" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);font-size:12px;">Sign Out</button>
       </div>
     </div>
-  </main>
+  </div>
+  <div class="tv-admin-page">
+    <div id="auth-status" style="display:none;"></div>
+    <div id="admin-content">
+    <h1 class="tv-page-title" style="margin-bottom:20px;">Products & Stock</h1>
 
-  <script src="admin-products.js"></script>
-  <script src="cart-badge.js"></script>
-  <script src="auth.js"></script>
-  <script src="global-search.js"></script>
+    <div class="tv-admin-card">
+      <h3><i class="fa-solid fa-box-archive"></i> Product Management</h3>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <input id="product-search" class="tv-input" type="text" placeholder="Search products..." style="max-width:260px;">
+        <button id="new-product-btn" class="tv-btn tv-btn--blue tv-btn--sm"><i class="fa-solid fa-plus"></i> Add Product</button>
+        <button id="refresh-products" class="tv-btn tv-btn--ghost tv-btn--sm"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        <div id="notice" style="flex:1;font-size:13px;color:var(--tv-success);"></div>
+      </div>
+      <div id="product-form" style="background:var(--tv-bg);border:1px solid var(--tv-border);border-radius:var(--tv-radius);padding:20px;margin-bottom:16px;display:none;">
+        <h4 id="form-title" style="font-family:var(--tv-font-head);font-size:15px;font-weight:700;margin-bottom:14px;">Add Product</h4>
+        <input id="product-id" type="hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="tv-form-group"><label class="tv-label">Product Name</label><input id="name" class="tv-input" type="text" placeholder="Product name"></div>
+          <div class="tv-form-group"><label class="tv-label">Brand</label><input id="brand" class="tv-input" type="text" placeholder="Brand"></div>
+          <div class="tv-form-group"><label class="tv-label">SKU</label><input id="sku" class="tv-input" type="text" placeholder="TV-ABC-001"></div>
+          <div class="tv-form-group"><label class="tv-label">Variant Label</label><input id="variant_label" class="tv-input" type="text" placeholder="e.g. Black / 256GB"></div>
+          <div class="tv-form-group"><label class="tv-label">Price (£)</label><input id="price" class="tv-input" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="tv-form-group"><label class="tv-label">Stock Qty</label><input id="stock" class="tv-input" type="number" min="0" placeholder="0"></div>
+          <div class="tv-form-group"><label class="tv-label">Low Stock Threshold</label><input id="low_stock_threshold" class="tv-input" type="number" min="0" placeholder="5"></div>
+          <div class="tv-form-group"><label class="tv-label">Category Name</label><input id="new_category_name" class="tv-input" type="text" placeholder="e.g. Headphones"><select id="category_id" class="tv-input" style="margin-top:6px;"><option value="">Select existing...</option></select></div>
+          <div class="tv-form-group"><label class="tv-label">Image URL</label><input id="image_url" class="tv-input" type="url" placeholder="https://..."></div>
+          <div class="tv-form-group"><label class="tv-label">Image File</label><input id="image_file" class="tv-input" type="file" accept="image/*"></div>
+        </div>
+        <div class="tv-form-group" style="margin-bottom:12px;"><label class="tv-label">Description</label><textarea id="description" class="tv-input" rows="3" style="resize:vertical;"></textarea></div>
+        <div style="margin-bottom:14px;display:flex;align-items:center;gap:6px;font-size:13px;">
+          <input id="active" type="checkbox" checked> <label>Active listing</label>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button id="save-product-btn" class="tv-btn tv-btn--blue tv-btn--sm">Save Product</button>
+          <button id="reset-form" class="tv-btn tv-btn--ghost tv-btn--sm">Cancel</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tv-table" id="products-table">
+          <thead>
+            <tr><th>Product</th><th>SKU / Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="products-table-body">
+            <tr><td colspan="6" class="tv-muted" style="text-align:center;padding:32px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading products...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  </div>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script src="javascript/admin-products.js"></script>
 </body>
 </html>

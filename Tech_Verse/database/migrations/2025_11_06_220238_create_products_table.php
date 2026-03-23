@@ -6,33 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); // seller
             $table->string('name');
             $table->string('slug')->unique();
-             
-             //if category is deleted all products are deleted
-              $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
-             //if a variant is deleted all its products are delete
-          
-            $table->string('brand')->unique();
-           // $table->decimal('price',10,2);   -this may be helpful later
-           // $table->integer('stock');
             $table->text('description')->nullable();
+            $table->string('brand')->nullable();          // NOT unique — multiple products per brand
             $table->string('image_url')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->boolean('active')->default(true);
+            $table->boolean('is_sold')->default(false);   // seller can mark as sold
             $table->timestamps();
+
+            $table->index(['category_id', 'active']);
+            $table->index('user_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('products');

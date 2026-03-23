@@ -3,295 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
   <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-  <title>Checkout - Tech Verse</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/cart.css">
+  <title>Checkout — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    .tv-checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+    .tv-checkout-section {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .tv-checkout-section h3 {
+      font-family: var(--tv-font-head);
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 16px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--tv-border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tv-checkout-section h3 i { color: var(--tv-primary); }
+    .tv-form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tv-checkout-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--tv-border); }
+    .tv-checkout-item:last-child { border-bottom: none; }
+    .tv-checkout-item img { width: 56px; height: 56px; object-fit: contain; background: #f8f8f8; border-radius: var(--tv-radius-sm); padding: 4px; flex-shrink: 0; }
+    .tv-checkout-item__name { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.3; }
+    .tv-checkout-item__price { font-family: var(--tv-font-head); font-weight: 700; font-size: 15px; }
+
+    .tv-order-summary {
+      background: var(--tv-surface);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius-lg);
+      padding: 20px;
+      position: sticky;
+      top: 72px;
+    }
+    .tv-order-summary h3 { font-family: var(--tv-font-head); font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-border); }
+    .tv-summary-row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; }
+    .tv-summary-row.total { font-family: var(--tv-font-head); font-size: 20px; font-weight: 800; border-top: 2px solid var(--tv-border); margin-top: 8px; padding-top: 12px; }
+
+    .tv-step { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .tv-step__num { width: 28px; height: 28px; border-radius: 50%; background: var(--tv-primary); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .tv-card-field {
+      display: grid;
+      grid-template-columns: 1fr 100px 80px;
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .tv-checkout-layout { grid-template-columns: 1fr; }
+      .tv-order-summary { position: static; }
+      .tv-form-2col, .tv-card-field { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <header class="minimal-header">
-    <nav style="display:flex;align-items:center;gap:12px;padding:12px 20px;">
-      <li class="static" id="flag">flag</li>
-      <div class="logo"><h1 style="margin:0;">Tech Verse</h1></div>
-      <div style="margin-left:auto">
-        <button id="back-btn" class="btn-ghost" onclick="history.back()">Back</button>
-      </div>
-    </nav>
-  </header>
 
-  <main class="account-main">
-    <h2>Checkout</h2>
-    <section class="panel-block">
-      <div class="cart-grid">
-        <div class="cart-left">
-          <h3>Your cart</h3>
-          <p class="muted">This is a dummy checkout page. No real payments will be processed.</p>
-          <div id="checkout-items">
-            <p class="muted">Loading cart items...</p>
-          </div>
-          <!-- Delivery address block -->
-          <div id="delivery-address" style="margin-top:16px;padding:12px;border:1px solid #eef2f6;border-radius:8px;background:#fff">
-            <h4>Delivery address</h4>
-            <label for="country-select">Country</label>
-            <select id="country-select" class="full-input">
-              <option value="">Select a country</option>
-              <option>Afghanistan</option>
-              <option>Albania</option>
-              <option>Algeria</option>
-              <option>Andorra</option>
-              <option>Angola</option>
-              <option>Antigua and Barbuda</option>
-              <option>Argentina</option>
-              <option>Armenia</option>
-              <option>Australia</option>
-              <option>Austria</option>
-              <option>Azerbaijan</option>
-              <option>Bahamas</option>
-              <option>Bahrain</option>
-              <option>Bangladesh</option>
-              <option>Barbados</option>
-              <option>Belarus</option>
-              <option>Belgium</option>
-              <option>Belize</option>
-              <option>Benin</option>
-              <option>Bhutan</option>
-              <option>Bolivia</option>
-              <option>Bosnia and Herzegovina</option>
-              <option>Botswana</option>
-              <option>Brazil</option>
-              <option>Brunei</option>
-              <option>Bulgaria</option>
-              <option>Burkina Faso</option>
-              <option>Burundi</option>
-              <option>Cabo Verde</option>
-              <option>Cambodia</option>
-              <option>Cameroon</option>
-              <option>Canada</option>
-              <option>Central African Republic</option>
-              <option>Chad</option>
-              <option>Chile</option>
-              <option>China</option>
-              <option>Colombia</option>
-              <option>Comoros</option>
-              <option>Congo, Democratic Republic of the</option>
-              <option>Congo, Republic of the</option>
-              <option>Costa Rica</option>
-              <option>Côte d'Ivoire</option>
-              <option>Croatia</option>
-              <option>Cuba</option>
-              <option>Cyprus</option>
-              <option>Czechia</option>
-              <option>Denmark</option>
-              <option>Djibouti</option>
-              <option>Dominica</option>
-              <option>Dominican Republic</option>
-              <option>Ecuador</option>
-              <option>Egypt</option>
-              <option>El Salvador</option>
-              <option>Equatorial Guinea</option>
-              <option>Eritrea</option>
-              <option>Estonia</option>
-              <option>Eswatini</option>
-              <option>Ethiopia</option>
-              <option>Fiji</option>
-              <option>Finland</option>
-              <option>France</option>
-              <option>Gabon</option>
-              <option>Gambia</option>
-              <option>Georgia</option>
-              <option>Germany</option>
-              <option>Ghana</option>
-              <option>Greece</option>
-              <option>Grenada</option>
-              <option>Guatemala</option>
-              <option>Guinea</option>
-              <option>Guinea-Bissau</option>
-              <option>Guyana</option>
-              <option>Haiti</option>
-              <option>Honduras</option>
-              <option>Hungary</option>
-              <option>Iceland</option>
-              <option>India</option>
-              <option>Indonesia</option>
-              <option>Iran</option>
-              <option>Iraq</option>
-              <option>Ireland</option>
-              <option>Israel</option>
-              <option>Italy</option>
-              <option>Jamaica</option>
-              <option>Japan</option>
-              <option>Jordan</option>
-              <option>Kazakhstan</option>
-              <option>Kenya</option>
-              <option>Kiribati</option>
-              <option>Korea, North</option>
-              <option>Korea, South</option>
-              <option>Kuwait</option>
-              <option>Kyrgyzstan</option>
-              <option>Laos</option>
-              <option>Latvia</option>
-              <option>Lebanon</option>
-              <option>Lesotho</option>
-              <option>Liberia</option>
-              <option>Libya</option>
-              <option>Liechtenstein</option>
-              <option>Lithuania</option>
-              <option>Luxembourg</option>
-              <option>Madagascar</option>
-              <option>Malawi</option>
-              <option>Malaysia</option>
-              <option>Maldives</option>
-              <option>Mali</option>
-              <option>Malta</option>
-              <option>Marshall Islands</option>
-              <option>Mauritania</option>
-              <option>Mauritius</option>
-              <option>Mexico</option>
-              <option>Micronesia</option>
-              <option>Moldova</option>
-              <option>Monaco</option>
-              <option>Mongolia</option>
-              <option>Montenegro</option>
-              <option>Morocco</option>
-              <option>Mozambique</option>
-              <option>Myanmar</option>
-              <option>Namibia</option>
-              <option>Nauru</option>
-              <option>Nepal</option>
-              <option>Netherlands</option>
-              <option>New Zealand</option>
-              <option>Nicaragua</option>
-              <option>Niger</option>
-              <option>Nigeria</option>
-              <option>North Macedonia</option>
-              <option>Norway</option>
-              <option>Oman</option>
-              <option>Pakistan</option>
-              <option>Palau</option>
-              <option>Panama</option>
-              <option>Papua New Guinea</option>
-              <option>Paraguay</option>
-              <option>Peru</option>
-              <option>Philippines</option>
-              <option>Poland</option>
-              <option>Portugal</option>
-              <option>Qatar</option>
-              <option>Romania</option>
-              <option>Russia</option>
-              <option>Rwanda</option>
-              <option>Saint Kitts and Nevis</option>
-              <option>Saint Lucia</option>
-              <option>Saint Vincent and the Grenadines</option>
-              <option>Samoa</option>
-              <option>San Marino</option>
-              <option>Sao Tome and Principe</option>
-              <option>Saudi Arabia</option>
-              <option>Senegal</option>
-              <option>Serbia</option>
-              <option>Seychelles</option>
-              <option>Sierra Leone</option>
-              <option>Singapore</option>
-              <option>Slovakia</option>
-              <option>Slovenia</option>
-              <option>Solomon Islands</option>
-              <option>Somalia</option>
-              <option>South Africa</option>
-              <option>South Sudan</option>
-              <option>Spain</option>
-              <option>Sri Lanka</option>
-              <option>Sudan</option>
-              <option>Suriname</option>
-              <option>Sweden</option>
-              <option>Switzerland</option>
-              <option>Syria</option>
-              <option>Tajikistan</option>
-              <option>Tanzania</option>
-              <option>Thailand</option>
-              <option>Timor-Leste</option>
-              <option>Togo</option>
-              <option>Tonga</option>
-              <option>Trinidad and Tobago</option>
-              <option>Tunisia</option>
-              <option>Turkey</option>
-              <option>Turkmenistan</option>
-              <option>Tuvalu</option>
-              <option>Uganda</option>
-              <option>Ukraine</option>
-              <option>United Arab Emirates</option>
-              <option>United Kingdom</option>
-              <option>United States</option>
-              <option>Uruguay</option>
-              <option>Uzbekistan</option>
-              <option>Vanuatu</option>
-              <option>Vatican City</option>
-              <option>Venezuela</option>
-              <option>Vietnam</option>
-              <option>Yemen</option>
-              <option>Zambia</option>
-              <option>Zimbabwe</option>
-            </select>
+  <!-- Minimal checkout header -->
+  <div style="background: var(--tv-navy-mid); padding: 0 16px; height: var(--tv-nav-h); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+    <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+    <div style="display:flex;align-items:center;gap:16px;font-size:13px;color:#aaa;">
+      <span><i class="fa-solid fa-shield-halved" style="color:var(--tv-yellow)"></i> Secure Checkout</span>
+      <button id="back-btn" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);" onclick="history.back()">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </button>
+    </div>
+  </div>
 
-            <label for="address-line1" style="margin-top:10px">Address line 1</label>
-            <input id="address-line1" class="full-input" type="text" placeholder="Street address, PO box, company name, c/o">
+  <div class="tv-page">
+    <div class="tv-breadcrumb">
+      <a href="cart.html">Cart</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <span>Checkout</span>
+    </div>
 
-            <label for="address-line2" style="margin-top:10px">Address line 2 (optional)</label>
-            <input id="address-line2" class="full-input" type="text" placeholder="Apartment, suite, unit, building, floor">
+    <h1 class="tv-page-title"><i class="fa-solid fa-lock" style="color:var(--tv-primary);margin-right:10px"></i>Checkout</h1>
 
-            <label for="county" style="margin-top:10px">County / State</label>
-            <input id="county" class="full-input" type="text" placeholder="County or state">
+    <div id="checkout-msg" style="margin-bottom:16px;"></div>
 
-            <label for="postal-code" style="margin-top:10px">Postal code</label>
-            <input id="postal-code" class="full-input" type="text" placeholder="ZIP / postal code">
+    <div class="tv-checkout-layout">
+
+      <!-- Left: forms -->
+      <div>
+
+        <!-- Delivery address -->
+        <div class="tv-checkout-section">
+          <h3><i class="fa-solid fa-location-dot"></i> Delivery Address</h3>
+          <div class="tv-form-2col" style="margin-bottom:12px;">
+            <div class="tv-form-group">
+              <label class="tv-label">Address Line 1</label>
+              <input id="address-line1" class="tv-input" type="text" placeholder="123 High Street">
+            </div>
+            <div class="tv-form-group">
+              <label class="tv-label">Address Line 2 (optional)</label>
+              <input id="address-line2" class="tv-input" type="text" placeholder="Flat, apartment, etc.">
+            </div>
+            <div class="tv-form-group">
+              <label class="tv-label">City</label>
+              <input id="county" class="tv-input" type="text" placeholder="Birmingham">
+            </div>
+            <div class="tv-form-group">
+              <label class="tv-label">Postcode</label>
+              <input id="postal-code" class="tv-input" type="text" placeholder="B1 1AA">
+            </div>
+            <div class="tv-form-group">
+              <label class="tv-label">Country</label>
+              <select id="country-select" class="tv-input">
+                <option value="">Select country</option>
+                <option value="United Kingdom" selected>United Kingdom</option>
+                <option value="United States">United States</option>
+                <option value="Canada">Canada</option>
+                <option value="Australia">Australia</option>
+                <option value="Germany">Germany</option>
+                <option value="France">France</option>
+                <option value="Ireland">Ireland</option>
+                <option value="Netherlands">Netherlands</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <aside class="cart-right">
-          <div id="payment-panel" style="margin-bottom:12px">
-            <h4>Shipping options</h4>
-            <label><input type="radio" name="shipping" value="standard" data-cost="4.99" checked> Standard (3-7 days) - <span class="shipping-cost" data-cost="4.99"></span></label><br>
-            <label><input type="radio" name="shipping" value="expedited" data-cost="9.99"> Expedited (1-3 days) - <span class="shipping-cost" data-cost="9.99"></span></label><br>
-            <label><input type="radio" name="shipping" value="overnight" data-cost="19.99"> Overnight (1 day) - <span class="shipping-cost" data-cost="19.99"></span></label>
+        <!-- Cart items in checkout -->
+        <div class="tv-checkout-section">
+          <h3><i class="fa-solid fa-basket-shopping"></i> Your Items</h3>
+          <div id="checkout-items">
+            <p class="tv-muted"><i class="fa-solid fa-spinner fa-spin"></i> Loading cart...</p>
+          </div>
+        </div>
 
-            <h4 style="margin-top:12px">Payment details</h4>
-            <div class="card-fields">
-              <label for="card-name">Card holder</label>
-              <input class="full-input" type="text" id="card-name" placeholder="Full name">
-
-              <label for="card-number">Card number</label>
-              <input class="full-input" type="text" id="card-number" placeholder="0000 0000 0000 0000">
-
-              <div class="small-input-row">
-                <div>
-                  <label for="card-expiry">Expiry</label>
-                  <input class="small-input" type="text" id="card-expiry" placeholder="MM/YY">
-                </div>
-                <div>
-                  <label for="card-cvv">CVV</label>
-                  <input class="small-input" type="text" id="card-cvv" placeholder="123">
-                </div>
-              </div>
+        <!-- Payment (dummy) -->
+        <div class="tv-checkout-section">
+          <h3><i class="fa-solid fa-credit-card"></i> Payment Details</h3>
+          <p class="tv-alert tv-alert--info" style="margin-bottom:16px;">
+            <i class="fa-solid fa-circle-info"></i> <strong>Demo mode</strong> — No real payments are processed. Enter any card details to test.
+          </p>
+          <div class="tv-form-group" style="margin-bottom:12px;">
+            <label class="tv-label">Name on Card</label>
+            <input id="card-name" class="tv-input" type="text" placeholder="Full name as on card">
+          </div>
+          <div class="tv-form-group" style="margin-bottom:12px;">
+            <label class="tv-label">Card Number</label>
+            <input id="card-number" class="tv-input" type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+          <div class="tv-card-field">
+            <div class="tv-form-group">
+              <label class="tv-label">Expiry</label>
+              <input id="card-expiry" class="tv-input" type="text" placeholder="MM/YY" maxlength="5">
+            </div>
+            <div class="tv-form-group">
+              <label class="tv-label">CVV</label>
+              <input id="card-cvv" class="tv-input" type="text" placeholder="123" maxlength="4">
             </div>
           </div>
+        </div>
 
-          <div id="checkout-summary">
-            <div id="summary-subtotal"></div>
-            <div id="summary-shipping"></div>
-            <div id="summary-total" style="font-weight:700;margin-top:6px"></div>
-          </div>
-
-          <div class="checkout-actions" style="margin-top:14px">
-            <button id="place-order" class="btn-primary">Place order (dummy)</button>
-          </div>
-          <p id="order-result" style="margin-top:12px;color:green"></p>
-        </aside>
       </div>
-    </section>
-  </main>
 
-  <script src="geo-flag.js"></script>
-  <script src="currency.js"></script>
-  <script src="checkout.js"></script>
-  <script src="auth.js"></script>
+      <!-- Right: order summary -->
+      <aside>
+        <div class="tv-order-summary">
+          <h3>Order Summary</h3>
+          <div id="checkout-summary">
+            <div class="tv-summary-row"><span>Subtotal</span><span id="summary-subtotal">—</span></div>
+            <div class="tv-summary-row"><span>Delivery</span><span id="summary-shipping" style="color:var(--tv-success)">Free</span></div>
+            <div class="tv-summary-row total"><span>Total</span><span id="summary-total">—</span></div>
+          </div>
+          <div id="order-result" style="font-size:13px;margin-bottom:10px;"></div>
+          <button id="place-order" class="tv-btn tv-btn--primary tv-btn--full tv-btn--lg" style="margin-top:20px;">
+            <i class="fa-solid fa-check"></i> Place Order
+          </button>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--tv-text-3);margin-top:12px;">
+            <i class="fa-solid fa-shield-halved"></i> SSL secured · Your data is safe
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="tv-footer">
+    <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Secure Checkout</div>
+  </footer>
+
+  <script src="javascript/cart-badge.js"></script>
+  <script src="javascript/auth.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script src="javascript/checkout.js"></script>
 </body>
 </html>

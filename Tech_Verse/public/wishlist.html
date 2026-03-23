@@ -2,88 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <meta name="csrf-token" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wish List - Tech Verse</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/PP.css">
-  <link rel="stylesheet" href="css/wishlist.css">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Wishlist — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
   <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <!-- Top navigation -->
-  <div class="topnav">
-    <nav>
-      <li class="static" id="flag">flag</li>
-      <li class="static" id="phone-number">phone number</li>
-      <div class="nav-right">
-        <li id="nav-myaccount"><a href="account.html">My account</a></li>
-        <li id="nav-wishlist"><a href="wishlist.html">Wish List</a></li>
-        <script src="javascript/geo-flag.js"></script>
-        <li id="nav-checkout"><a href="cart.html">Cart</a></li>
+  <!-- Top bar -->
+  <div class="tv-topbar">
+    <div class="tv-topbar__inner">
+      <div class="tv-topbar__flag" id="flag"><i class="fa-solid fa-globe"></i></div>
+      <div class="tv-topbar__links">
+        <a href="support.html"><i class="fa-solid fa-headset"></i> Support</a>
+        <a href="delivery.html"><i class="fa-solid fa-truck"></i> Free delivery over £50</a>
       </div>
-    </nav>
-  </div>
-
-  <hr>
-
-  <!-- Mid navigation -->
-  <div class="midnav">
-    <div class="logo">
-      <h1>Tech Verse</h1>
     </div>
-
-    <nav class="left-of_search">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="customer.html">Browse</a></li>
-      <li><a href="contact.html">Contact us</a></li>
-      <li><a href="aboutus.html">About us</a></li>
-    </nav>
-
-    <div class="right_of_search">
-      <input type="text" placeholder="Search..🔍">
-      <ul class="right_of_search">
-        <li id="nav-fav"><a href="liked.html"><i class="fa-solid fa-heart"></i></a></li>
-        <li id="nav-cart">
-          <a href="cart.html">
-            <i class="fa-solid fa-basket-shopping"></i>
-            <span id="cart-count" class="cart-badge">0</span>
-          </a>
-        </li>
-        <li id="nav-user"><a href="account.html"><i class="fa-solid fa-user"></i></a></li>
-      </ul>
-      <button id="signin" type="button" onclick="location.href='signin.html'">Sign In</button>
+  </div>
+  <nav class="tv-nav">
+    <div class="tv-nav__inner">
+      <a href="index.html" class="tv-logo"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:42px;width:auto;object-fit:contain;"></a>
+      <form class="tv-search" onsubmit="event.preventDefault();location.href='customer.html?search='+encodeURIComponent(this.querySelector('input').value)">
+        <input class="tv-search__input" type="text" placeholder="Search for products...">
+        <button class="tv-search__btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+      <div class="tv-nav__actions">
+        <a href="account.html" class="tv-nav__action"><i class="fa-regular fa-user"></i><span>Account</span></a>
+        <a href="liked.html" class="tv-nav__action"><i class="fa-regular fa-heart"></i><span>Saved</span></a>
+        <a href="cart.html" class="tv-nav__action">
+          <div class="tv-cart-badge"><i class="fa-solid fa-basket-shopping"></i><span id="cart-count" class="tv-cart-count" style="display:none"></span></div>
+          <strong>Cart</strong>
+        </a>
+        <button id="signin" class="tv-btn tv-btn--primary tv-btn--sm" onclick="location.href='signin.html'">Sign In</button>
+      </div>
+    </div>
+  </nav>
+  <div class="tv-catnav">
+    <div class="tv-catnav__inner">
+      <a href="customer.html" class="tv-catnav__link">All Products</a>
+      <a href="customer.html?cat=laptops" class="tv-catnav__link">Laptops</a>
+      <a href="customer.html?cat=gaming-gear" class="tv-catnav__link">Gaming</a>
+      <a href="customer.html?cat=headphones" class="tv-catnav__link">Audio</a>
+      <a href="customer.html?cat=accessories" class="tv-catnav__link">Accessories</a>
+      <a href="aboutus.html" class="tv-catnav__link">About</a>
+      <a href="contact.html" class="tv-catnav__link">Contact</a>
+      <a href="admin.html" class="tv-catnav__link" id="nav-admin" style="display:none;color:var(--tv-yellow)">Admin &#9733;</a>
     </div>
   </div>
 
-  <hr>
+  <div class="tv-page">
+    <div class="tv-breadcrumb">
+      <a href="index.html">Home</a>
+      <span class="tv-breadcrumb__sep">/</span>
+      <span>Wishlist</span>
+    </div>
+    <h1 class="tv-page-title">Wishlist</h1>
 
-  <main class="account-main">
-    <h2>Wish List</h2>
-
-    <section class="panel-block">
-      <p class="muted">
-        Save products you want to buy later. Move them to your cart when you're ready to check out.
-      </p>
-
-      <!-- ========================= -->
-      <!--  EMPTY STATE IS NOW ACTIVE -->
-      <!-- ========================= -->
-      <div class="wishlist-empty muted" style="margin-top:20px;">
-        <p>Your wish list is empty.</p>
-        <p>On a product page, click <strong>“♡ Add to Wishlist”</strong> to save items here.</p>
+    <div style="background:var(--tv-surface);border:1px solid var(--tv-border);border-radius:var(--tv-radius-lg);padding:24px;">
+      <div id="wishlist-content">
+        <p class="tv-muted"><i class="fa-solid fa-spinner fa-spin"></i> Loading wishlist...</p>
       </div>
+    </div>
 
-      <!--
-      If you later add JS that populates wishlist items,
-      you will hide .wishlist-empty and show #wishlist-items instead.
-      -->
+  </div>
 
-    </section>
-  </main>
+  <footer class="tv-footer">
+    <div class="tv-footer__top">
+      <div class="tv-footer__col"><div class="tv-footer__col-title">TechVerse</div><ul><li><a href="aboutus.html">About Us</a></li><li><a href="contact.html">Contact</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Customer Service</div><ul><li><a href="support.html">Help &amp; Support</a></li><li><a href="returns-info.html">Returns</a></li><li><a href="delivery.html">Delivery Info</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">My Account</div><ul><li><a href="account.html">My Account</a></li><li><a href="cart.html">My Cart</a></li><li><a href="liked.html">Saved Items</a></li></ul></div>
+      <div class="tv-footer__col"><div class="tv-footer__col-title">Shop</div><ul><li><a href="customer.html">Browse All</a></li></ul></div>
+    </div>
+    <div class="tv-footer__bottom">&copy; 2026 Tech Verse Ltd &middot; Aston University, Birmingham, UK</div>
+  </footer>
 
   <script src="javascript/cart-badge.js"></script>
   <script src="javascript/auth.js"></script>
+  <script src="javascript/geo-flag.js"></script>
   <script src="javascript/cookie-consent.js"></script>
+
 </body>
 </html>

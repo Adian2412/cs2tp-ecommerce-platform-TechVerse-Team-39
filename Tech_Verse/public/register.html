@@ -1,80 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
-    <title>Create Account - Tech Verse</title>
-    <link rel="stylesheet" href="css/create.css">
-    <meta name="csrf-token" content="">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
+  <meta name="tv-api-base" content="https://cs2team39.cs2410-web01pvm.aston.ac.uk">
+  <title>Create Account — Tech Verse</title>
+  <link rel="stylesheet" href="css/tv.css">
+  <script src="https://kit.fontawesome.com/30b10264ad.js" crossorigin="anonymous"></script>
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; background: var(--tv-bg); }
+    .tv-auth-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+    .tv-auth-card { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: var(--tv-radius-xl); padding: 40px; width: 100%; max-width: 480px; box-shadow: var(--tv-shadow-lg); }
+    .tv-auth-title { font-family: var(--tv-font-head); font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 24px; }
+    .tv-auth-form { display: flex; flex-direction: column; gap: 14px; }
+    .tv-name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tv-pw-strength { height: 4px; border-radius: 999px; background: var(--tv-border); overflow: hidden; margin-top: 6px; }
+    .tv-pw-strength__bar { height: 100%; width: 0; border-radius: 999px; transition: width 0.3s, background 0.3s; }
+    .tv-pw-label { font-size: 12px; margin-top: 4px; }
+    .tv-captcha { border: 1px solid var(--tv-border-dk); border-radius: var(--tv-radius-sm); padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; background: #fafafa; }
+    .tv-captcha:hover { border-color: var(--tv-primary); }
+    .tv-captcha input { accent-color: var(--tv-primary); width: 16px; height: 16px; cursor: pointer; }
+    .tv-captcha label { font-size: 14px; color: var(--tv-text-2); cursor: pointer; }
+    .tv-privacy-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--tv-text-2); }
+    .tv-privacy-check input { accent-color: var(--tv-primary); margin-top: 2px; flex-shrink: 0; }
+  </style>
 </head>
 <body>
-    <div class="backBut">
-        <input type="button" value="back" onclick="history.back()">
+
+  <!-- Minimal header -->
+  <div style="background: var(--tv-navy-mid); padding: 12px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <a href="index.html"><img src="images/Techverse Logo/techverse_logo.png" alt="TechVerse" style="height:38px;width:auto;object-fit:contain;"></a>
+    <a href="signin.html" class="tv-btn tv-btn--ghost tv-btn--sm" style="color:#ccc;border-color:rgba(255,255,255,0.2);">
+      <i class="fa-solid fa-arrow-left"></i> Sign in instead
+    </a>
+  </div>
+
+  <div class="tv-auth-wrap">
+    <div class="tv-auth-card">
+      <div class="tv-auth-title">Create your account</div>
+
+      <form id="register-form" class="tv-auth-form">
+        <input type="hidden" id="reg-role" name="role" value="customer">
+
+        <div class="tv-name-row">
+          <div class="tv-form-group">
+            <label class="tv-label" for="reg-first">First name</label>
+            <input id="reg-first" class="tv-input" type="text" placeholder="First name" required autocomplete="given-name">
+          </div>
+          <div class="tv-form-group">
+            <label class="tv-label" for="reg-last">Surname</label>
+            <input id="reg-last" class="tv-input" type="text" placeholder="Surname" required autocomplete="family-name">
+          </div>
+        </div>
+
+        <div class="tv-form-group">
+          <label class="tv-label" for="reg-email"><i class="fa-regular fa-envelope" style="color:var(--tv-primary);margin-right:4px"></i>Email address</label>
+          <input id="reg-email" class="tv-input" type="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+
+        <div class="tv-form-group">
+          <label class="tv-label" for="reg-password"><i class="fa-solid fa-lock" style="color:var(--tv-primary);margin-right:4px"></i>Password</label>
+          <input id="reg-password" class="tv-input" type="password" placeholder="Min. 8 characters" required autocomplete="new-password" minlength="8">
+          <div class="tv-pw-strength"><div id="pw-strength-bar" class="tv-pw-strength__bar"></div></div>
+          <div id="pw-strength-text" class="tv-pw-label tv-muted"></div>
+        </div>
+
+        <div id="admin-code-container" style="display:none;">
+          <div class="tv-form-group">
+            <label class="tv-label" for="reg-admin-code">Admin code</label>
+            <input id="reg-admin-code" class="tv-input" type="text" placeholder="Developer admin code">
+          </div>
+        </div>
+
+        <label class="tv-privacy-check">
+          <input type="checkbox" id="privacy-consent" name="privacy_consent" required>
+          <span>I have read and agree to the <a href="privacy.html" target="_blank" style="color:var(--tv-primary)">Privacy Policy</a>. I understand how Tech Verse collects and uses my personal data.</span>
+        </label>
+
+        <div class="tv-captcha">
+          <input type="checkbox" id="captcha-box">
+          <label for="captcha-box">I'm not a robot</label>
+          <i class="fa-solid fa-shield-halved" style="margin-left:auto;color:var(--tv-primary);font-size:18px;"></i>
+        </div>
+
+        <div id="register-msg" style="font-size:13px;text-align:center;min-height:18px;"></div>
+
+        <button type="submit" class="tv-btn tv-btn--primary tv-btn--full tv-btn--lg">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--tv-text-3);">
+        Already have an account? <a href="signin.html" style="color:var(--tv-primary);font-weight:600;">Sign in</a>
+      </p>
+      <p style="text-align:center;margin-top:6px;font-size:12px;color:var(--tv-text-3);">
+        Customer accounts can browse, order, review products and sell items.
+      </p>
     </div>
+  </div>
 
-    <div class="logo">
-        <h1>Tech Verse</h1>
-    </div>
-
-    <div class="wrapper">
-        <form id="register-form" action="#" method="post" onsubmit="return false;">
-            <h1>Create an account</h1>
-
-            <div class="name_row">
-                <div class="input_box half">
-                    <input id="reg-first" name="first_name" type="text" placeholder="First Name" required>
-                </div>
-                <div class="input_box half">
-                    <input id="reg-last" name="last_name" type="text" placeholder="Surname" required>
-                </div>
-            </div>
-
-            <div class="input_box">
-                <input id="reg-email" name="email" type="email" placeholder="Email" required>
-            </div>
-
-            <div class="input_box">
-                <input id="reg-password" name="password" type="password" placeholder="Password" required>
-            </div>
-
-            <div id="pw-strength-text" style="margin:4px 0;font-size:14px;"></div>
-            <div id="pw-strength-bar" style="height:6px;width:0;background:red;transition:0.3s;border-radius:3px;"></div>
-            <br>
-
-            <div class="input_box">
-                <input type="hidden" id="reg-role" name="role" value="customer">
-                <small style="color:#666;font-size:12px;">Customer accounts can browse, order, review products and sell products. Admin sign-up is only for the coursework demo.</small>
-            </div>
-
-            <div class="input_box" id="admin-code-container" style="display:none;">
-                <input id="reg-admin-code" name="admin_code" type="text" placeholder="Developer Admin Code" style="width:100%;padding:12px;border:1px solid #ccc;border-radius:4px;font-size:16px;">
-                <small style="color:#666;font-size:12px;">Required for admin account creation</small>
-            </div>
-
-            <div class="remember_forgot">
-                <p>By creating an account you agree to use the Tech Verse demo responsibly.</p>
-            </div>
-
-            <div id="captcha">
-                <input type="checkbox" id="captcha-box">
-                <label for="captcha-box">I'm not a robot</label>
-            </div>
-
-            <br>
-            <button type="submit" class="button">Create account</button>
-            <div id="register-msg" style="margin-top:8px;color:#d00"></div>
-        </form>
-    </div>
-
-    <script src="register.js"></script>
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const isAdminReg = urlParams.get('admin') === 'true';
-      if (isAdminReg) {
-          document.getElementById('admin-code-container').style.display = 'block';
-          document.getElementById('reg-role').value = 'admin';
-      }
-    </script>
+  <script src="javascript/register.js"></script>
+  <script src="javascript/cookie-consent.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'true') {
+      document.getElementById('admin-code-container').style.display = 'block';
+      document.getElementById('reg-role').value = 'admin';
+    }
+  </script>
 </body>
 </html>

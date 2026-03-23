@@ -15,6 +15,12 @@ class ServiceReview extends Model
         'comment',
     ];
 
+    protected $casts = [
+        'rating'     => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
